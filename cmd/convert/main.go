@@ -12,10 +12,10 @@ import (
 	"strings"
 
 	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/namespaces"
+	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/hinshun/image2ipfs"
@@ -68,6 +68,8 @@ func run(ctx context.Context, src, dst string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to convert %q to ipfs manifest", srcName)
 	}
+	defaultPlatform := platforms.DefaultSpec()
+	mfstDesc.Platform = &defaultPlatform
 	log.Printf("Converted %q manifest from %q to %q", srcName, srcDesc.Digest, mfstDesc.Digest)
 
 	dstImg := images.Image{
@@ -81,61 +83,16 @@ func run(ctx context.Context, src, dst string) error {
 	}
 	log.Printf("Successfully created image %q", dstImg.Name)
 
-	// wd, err := os.Getwd()
-	// if err != nil {
-	// 	return errors.Wrap(err, "failed to get workdir")
-	// }
+	p := []ocispec.Platform{platforms.DefaultSpec()}
 
-	// ipcsStore, err := ipcs.NewContentStore(ipcs.Config{
-	// 	RootDir: filepath.Join(wd, "tmp/containerd/root/io.containerd.content.v1.ipcs"),
-	// })
-	// if err != nil {
-	// 	return errors.Wrap(err, "failed to create ipcs")
-	// }
-
-	// i, err := ipcsStore.Info(ctx, digest.Digest("sha256:2886587d8dd7f006c855ecd597a1b551d1e590598c102884d013e1c3e069fa1e"))
-	// if err != nil {
-	// 	return errors.Wrap(err, "failed to get info")
-	// }
-	// log.Printf("Info:\n%v", i)
-
-	// p, err := images.Platforms(ctx, ctrdCln.ContentStore(), dstImg.Target)
-	// if err != nil {
-	// 	return errors.Wrap(err, "unable to resolve image platforms")
-	// }
-
-	// if len(p) == 0 {
-	// 	p = append(p, platforms.DefaultSpec())
-	// }
-
-	log.Printf("Reading blob: %s", dstImg.Target.Digest)
-	p, err := content.ReadBlob(ctx, ctrdCln.ContentStore(), dstImg.Target)
-	if err != nil {
-		return errors.Wrapf(err, "failed to read blob %q", dstImg.Target.Digest)
+	for _, platform := range p {
+		log.Printf("Unpacking %q %q...\n", platforms.Format(platform), dstImg.Target.Digest)
+		i := containerd.NewImageWithPlatform(ctrdCln, dstImg, platforms.Only(platform))
+		err = i.Unpack(ctx, containerd.DefaultSnapshotter)
+		if err != nil {
+			return errors.Wrap(err, "failed to unpack image")
+		}
 	}
-	log.Printf("Read blob:\n%s", p)
-
-	// p := []ocispec.Platform{platforms.DefaultSpec()}
-
-	// for _, platform := range p {
-	//         log.Printf("Unpacking %q %q...\n", platforms.Format(platform), dstImg.Target.Digest)
-	//         i := containerd.NewImageWithPlatform(ctrdCln, dstImg, platforms.Only(platform))
-	//         err = i.Unpack(ctx, containerd.DefaultSnapshotter)
-	//         if err != nil {
-	//                 return errors.Wrap(err, "failed to unpack image")
-	//         }
-	// }
-
-	// err = ctrdCln.Push(ctx, dst, mfstDesc)
-	// if err != nil {
-	// 	return errors.Wrapf(err, "failed to push %q", dstImg.Name)
-	// }
-	// log.Printf("Pushed '%s@%s'", dstImg.Name, dstImg.Target.Digest)
-
-	// err = pushTag(ctx, http.DefaultClient, bytes.NewReader(mfstJSON), dstImg.Name, dstImg.Target)
-	// if err != nil {
-	// 	return errors.Wrapf(err, "failed to push tag %q", dstImg.Name)
-	// }
 
 	return nil
 }

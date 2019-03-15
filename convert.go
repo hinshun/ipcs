@@ -28,6 +28,12 @@ func Convert(ctx context.Context, cln iface.CoreAPI, provider content.Provider, 
 	}
 	log.Printf("Original Manifest:\n%s", origMfstJSON)
 
+	origMfstConfigJSON, err := content.ReadBlob(ctx, provider, mfst.Config)
+	if err != nil {
+		return nil, ocispec.Descriptor{}, errors.Wrap(err, "failed to get original manifest config JSON")
+	}
+	log.Printf("Original Manifest Config:\n%s", origMfstConfigJSON)
+
 	mfst.Config, err = uploadFromStore(ctx, cln, provider, ingester, mfst.Config)
 	if err != nil {
 		return nil, ocispec.Descriptor{}, errors.Wrapf(err, "failed to upload manifest config blob %q", mfst.Config.Digest)
@@ -50,6 +56,7 @@ func Convert(ctx context.Context, cln iface.CoreAPI, provider content.Provider, 
 	if err != nil {
 		return nil, ocispec.Descriptor{}, errors.Wrap(err, "failed to upload manifest")
 	}
+	mfstDesc.MediaType = ocispec.MediaTypeImageManifest
 
 	return mfstJSON, mfstDesc, nil
 }
