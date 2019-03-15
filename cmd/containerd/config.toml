@@ -28,7 +28,7 @@ oom_score = 0
   [plugins.linux]
     shim = "containerd-shim"
     runtime = "runc"
-    runtime_root = ""
+    runtime_root = "/home/edgarl/go/src/github.com/hinshun/image2ipfs/tmp/containerd/runc"
     no_shim = false
     shim_debug = false
   [plugins.scheduler]

@@ -15,6 +15,7 @@ import (
 	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/namespaces"
+	"github.com/containerd/containerd/oci"
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes/docker"
@@ -22,6 +23,7 @@ import (
 	httpapi "github.com/ipfs/go-ipfs-http-client"
 	"github.com/moby/buildkit/util/contentutil"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context/ctxhttp"
 )
@@ -68,8 +70,6 @@ func run(ctx context.Context, src, dst string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to convert %q to ipfs manifest", srcName)
 	}
-	defaultPlatform := platforms.DefaultSpec()
-	mfstDesc.Platform = &defaultPlatform
 	log.Printf("Converted %q manifest from %q to %q", srcName, srcDesc.Digest, mfstDesc.Digest)
 
 	dstImg := images.Image{
@@ -83,16 +83,61 @@ func run(ctx context.Context, src, dst string) error {
 	}
 	log.Printf("Successfully created image %q", dstImg.Name)
 
+	// p, err := images.Platforms(ctx, ctrdCln.ContentStore(), dstImg.Target)
+	// if err != nil {
+	// 	return errors.Wrap(err, "unable to resolve image platforms")
+	// }
+
+	// if len(p) == 0 {
+	// 	p = append(p, platforms.DefaultSpec())
+	// }
+
 	p := []ocispec.Platform{platforms.DefaultSpec()}
 
 	for _, platform := range p {
 		log.Printf("Unpacking %q %q...\n", platforms.Format(platform), dstImg.Target.Digest)
 		i := containerd.NewImageWithPlatform(ctrdCln, dstImg, platforms.Only(platform))
-		err = i.Unpack(ctx, containerd.DefaultSnapshotter)
+		err = i.Unpack(ctx, "native")
 		if err != nil {
 			return errors.Wrap(err, "failed to unpack image")
 		}
 	}
+
+	image, err := ctrdCln.GetImage(ctx, dstImg.Name)
+	if err != nil {
+		return errors.Wrap(err, "failed to get image")
+	}
+	log.Printf("Successfully get image %q", image.Name())
+
+	var (
+		opts  []oci.SpecOpts
+		cOpts []containerd.NewContainerOpts
+		s     specs.Spec
+	)
+
+	id := "helloworld"
+	opts = append(opts,
+		oci.WithTTY,
+		oci.WithRootFSReadonly(),
+		oci.WithProcessCwd("/"),
+		oci.WithProcessArgs("/bin/sh"),
+	)
+	cOpts = append(cOpts,
+		containerd.WithImage(image),
+		containerd.WithSnapshotter("native"),
+		// Even when "readonly" is set, we don't use KindView snapshot here. (#1495)
+		// We pass writable snapshot to the OCI runtime, and the runtime remounts it as read-only,
+		// after creating some mount points on demand.
+		containerd.WithNewSnapshot(id, image),
+		containerd.WithImageStopSignal(image, "SIGTERM"),
+		containerd.WithSpec(&s, opts...),
+	)
+
+	container, err := ctrdCln.NewContainer(ctx, id, cOpts...)
+	if err != nil {
+		return errors.Wrap(err, "failed to create container")
+	}
+	log.Printf("Successfully create container %q", container.ID())
 
 	return nil
 }

@@ -20,7 +20,7 @@ containerd: containerd-binary ipcs
 	@IPFS_PATH=./tmp/ipfs rootlesskit --copy-up=/etc \
 	  --state-dir=./tmp/rootlesskit-containerd \
 	    ./bin/containerd -l debug --config ./cmd/containerd/config.toml
-
+	    
 ipfs:
 	@mkdir -p ./tmp
 	@IPFS_PATH=./tmp/ipfs ipfs daemon --init

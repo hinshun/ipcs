@@ -10,6 +10,7 @@ require (
 	github.com/containerd/console v0.0.0-20181022165439-0650fd9eeb50 // indirect
 	github.com/containerd/containerd v1.2.4
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
+	github.com/containerd/cri v1.11.1 // indirect
 	github.com/containerd/fifo v0.0.0-20190226154929-a9fb20d87448 // indirect
 	github.com/containerd/go-runc v0.0.0-20190226155025-7d11b49dc076 // indirect
 	github.com/containerd/ttrpc v0.0.0-20190211042230-69144327078c // indirect
@@ -23,6 +24,7 @@ require (
 	github.com/docker/go-units v0.3.3 // indirect
 	github.com/godbus/dbus v4.1.0+incompatible // indirect
 	github.com/gogo/googleapis v1.1.0 // indirect
+	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/ipfs/go-cid v0.0.1
 	github.com/ipfs/go-ipfs-files v0.0.1
@@ -44,4 +46,8 @@ require (
 	go.etcd.io/bbolt v1.3.2 // indirect
 	golang.org/x/net v0.0.0-20190227160552-c95aed5357e7
 	google.golang.org/grpc v1.19.0 // indirect
+	gopkg.in/inf.v0 v0.9.1 // indirect
+	k8s.io/apimachinery v0.0.0-20190313115320-c9defaaddf6f // indirect
+	k8s.io/klog v0.2.0 // indirect
+	k8s.io/kubernetes v1.13.4 // indirect
 )
