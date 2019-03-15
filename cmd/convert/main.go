@@ -21,6 +21,7 @@ import (
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/hinshun/image2ipfs"
 	httpapi "github.com/ipfs/go-ipfs-http-client"
+	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/moby/buildkit/util/contentutil"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
@@ -41,6 +42,30 @@ func main() {
 }
 
 func run(ctx context.Context, src, dst string) error {
+	ipfsCln, err := httpapi.NewLocalApi()
+	if err != nil {
+		return errors.Wrap(err, "failed to create ipfs client")
+	}
+
+	ctrdCln, err := containerd.New("./tmp/containerd/containerd.sock")
+	if err != nil {
+		return errors.Wrap(err, "failed to create containerd client")
+	}
+
+	err = Convert(ctx, ipfsCln, ctrdCln, src, dst)
+	if err != nil {
+		return errors.Wrap(err, "failed to convert to p2p manifest")
+	}
+
+	err = RunContainer(ctx, ctrdCln, dst, "helloworld")
+	if err != nil {
+		return errors.Wrap(err, "failed to run container")
+	}
+
+	return nil
+}
+
+func Convert(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *containerd.Client, src, dst string) error {
 	resolver := docker.NewResolver(docker.ResolverOptions{
 		Client: http.DefaultClient,
 	})
@@ -54,16 +79,6 @@ func run(ctx context.Context, src, dst string) error {
 	fetcher, err := resolver.Fetcher(ctx, src)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create fetcher for %q", src)
-	}
-
-	ipfsCln, err := httpapi.NewLocalApi()
-	if err != nil {
-		return errors.Wrap(err, "failed to create ipfs client")
-	}
-
-	ctrdCln, err := containerd.New("./tmp/containerd/containerd.sock")
-	if err != nil {
-		return errors.Wrap(err, "failed to create containerd client")
 	}
 
 	_, mfstDesc, err := image2ipfs.Convert(ctx, ipfsCln, contentutil.FromFetcher(fetcher), ctrdCln.ContentStore(), srcDesc)
@@ -83,15 +98,6 @@ func run(ctx context.Context, src, dst string) error {
 	}
 	log.Printf("Successfully created image %q", dstImg.Name)
 
-	// p, err := images.Platforms(ctx, ctrdCln.ContentStore(), dstImg.Target)
-	// if err != nil {
-	// 	return errors.Wrap(err, "unable to resolve image platforms")
-	// }
-
-	// if len(p) == 0 {
-	// 	p = append(p, platforms.DefaultSpec())
-	// }
-
 	p := []ocispec.Platform{platforms.DefaultSpec()}
 
 	for _, platform := range p {
@@ -103,7 +109,11 @@ func run(ctx context.Context, src, dst string) error {
 		}
 	}
 
-	image, err := ctrdCln.GetImage(ctx, dstImg.Name)
+	return nil
+}
+
+func RunContainer(ctx context.Context, cln *containerd.Client, ref, id string) error {
+	image, err := cln.GetImage(ctx, ref)
 	if err != nil {
 		return errors.Wrap(err, "failed to get image")
 	}
@@ -115,7 +125,6 @@ func run(ctx context.Context, src, dst string) error {
 		s     specs.Spec
 	)
 
-	id := "helloworld"
 	opts = append(opts,
 		oci.WithTTY,
 		oci.WithRootFSReadonly(),
@@ -133,12 +142,16 @@ func run(ctx context.Context, src, dst string) error {
 		containerd.WithSpec(&s, opts...),
 	)
 
-	container, err := ctrdCln.NewContainer(ctx, id, cOpts...)
+	container, err := cln.NewContainer(ctx, id, cOpts...)
 	if err != nil {
 		return errors.Wrap(err, "failed to create container")
 	}
 	log.Printf("Successfully create container %q", container.ID())
 
+	return nil
+}
+
+func Pull(ctx context.Context, ref string) error {
 	return nil
 }
 
