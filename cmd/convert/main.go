@@ -20,9 +20,11 @@ import (
 	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/hinshun/image2ipfs"
+	"github.com/hinshun/image2ipfs/ipcs"
 	httpapi "github.com/ipfs/go-ipfs-http-client"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/moby/buildkit/util/contentutil"
+	digest "github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
@@ -52,12 +54,12 @@ func run(ctx context.Context, src, dst string) error {
 		return errors.Wrap(err, "failed to create containerd client")
 	}
 
-	err = Convert(ctx, ipfsCln, ctrdCln, src, dst)
+	err = Pull(ctx, ipfsCln, ctrdCln, src)
 	if err != nil {
 		return errors.Wrap(err, "failed to convert to p2p manifest")
 	}
 
-	err = RunContainer(ctx, ctrdCln, dst, "helloworld")
+	err = RunContainer(ctx, ctrdCln, src, "helloworld")
 	if err != nil {
 		return errors.Wrap(err, "failed to run container")
 	}
@@ -151,7 +153,73 @@ func RunContainer(ctx context.Context, cln *containerd.Client, ref, id string) e
 	return nil
 }
 
-func Pull(ctx context.Context, ref string) error {
+func Pull(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *containerd.Client, ref string) error {
+	// resolver := docker.NewResolver(docker.ResolverOptions{
+	//         Client: http.DefaultClient,
+	// })
+
+	// name, desc, err := resolver.Resolve(ctx, ref)
+	// if err != nil {
+	//         return errors.Wrapf(err, "failed to resolve %q", ref)
+	// }
+
+	name := ref
+	desc := ocispec.Descriptor{
+		MediaType: ocispec.MediaTypeImageManifest,
+		Digest:    digest.Digest("sha256:c0ecc9c9fb27ebc68af1014d2f1962f1533fe606f2ed5963c61d066976ce8d5a"),
+		Size: 456,
+	}
+
+	ingester := ctrdCln.ContentStore()
+	provider, err := ipcs.NewContentStore(ipcs.Config{RootDir: "./tmp/ipfs"})
+	if err != nil {
+		return errors.Wrap(err, "failed to create ipcs")
+	}
+
+	mfst, err := images.Manifest(ctx, provider, desc, platforms.Default())
+	if err != nil {
+		return errors.Wrap(err, "failed to get manifest")
+	}
+
+	err = contentutil.Copy(ctx, ingester, provider, mfst.Config)
+	if err != nil {
+		return errors.Wrapf(err, "failed to ingest manifest config blob %q", mfst.Config.Digest)
+	}
+
+	for _, layer := range mfst.Layers {
+		err = contentutil.Copy(ctx, ingester, provider, layer)
+		if err != nil {
+			return errors.Wrapf(err, "failed to ingest blob %q", layer.Digest)
+		}
+	}
+
+	err = contentutil.Copy(ctx, ingester, provider, desc)
+	if err != nil {
+		return errors.Wrapf(err, "failed to ingest manifest blob %q", desc.Digest)
+	}
+
+	image := images.Image{
+		Name:   name,
+		Target: desc,
+	}
+
+	image, err = createImage(ctx, ctrdCln, image)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create image %q", image.Name)
+	}
+	log.Printf("Successfully created image %q", image.Name)
+
+	p := []ocispec.Platform{platforms.DefaultSpec()}
+
+	for _, platform := range p {
+		log.Printf("Unpacking %q %q...\n", platforms.Format(platform), image.Target.Digest)
+		i := containerd.NewImageWithPlatform(ctrdCln, image, platforms.Only(platform))
+		err = i.Unpack(ctx, "native")
+		if err != nil {
+			return errors.Wrap(err, "failed to unpack image")
+		}
+	}
+
 	return nil
 }
 

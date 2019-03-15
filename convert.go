@@ -26,7 +26,7 @@ func Convert(ctx context.Context, cln iface.CoreAPI, provider content.Provider, 
 	if err != nil {
 		return nil, ocispec.Descriptor{}, errors.Wrap(err, "failed to marshal manifest JSON")
 	}
-	log.Printf("Original Manifest:\n%s", origMfstJSON)
+	log.Printf("Original Manifest [%d]:\n%s", origMfstJSON)
 
 	origMfstConfigJSON, err := content.ReadBlob(ctx, provider, mfst.Config)
 	if err != nil {
@@ -101,7 +101,7 @@ func uploadFromReader(ctx context.Context, cln iface.CoreAPI, provider content.P
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrapf(err, "failed to write blob %q", ipldDesc.Digest)
 	}
-	log.Printf("Added blob %q to containerd", ipldDesc.Digest)
+	log.Printf("Added blob %q [%d] to containerd", ipldDesc.Digest, ipldDesc.Size)
 
 	return ipldDesc, nil
 }
