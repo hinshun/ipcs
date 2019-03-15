@@ -16,9 +16,7 @@ import (
 //
 // If the content is not present, ErrNotFound will be returned.
 func (s *store) Info(ctx context.Context, dgst digest.Digest) (content.Info, error) {
-    	// panic("Info")
 	log.L.WithField("dgst", dgst).Infof("Info")
-
 	c, err := digestconv.DigestToCid(dgst)
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to convert digest %q to cid", dgst)

@@ -15,7 +15,6 @@ import (
 )
 
 func (s *store) ReaderAt(ctx context.Context, desc ocispec.Descriptor) (content.ReaderAt, error) {
-    	// panic("ReaderAt")
 	log.L.WithField("desc.Digest", desc.Digest).Infof("ReaderAt")
 	c, err := digestconv.DigestToCid(desc.Digest)
 	if err != nil {
@@ -28,13 +27,8 @@ func (s *store) ReaderAt(ctx context.Context, desc ocispec.Descriptor) (content.
 		return nil, errors.Wrapf(err, "failed to get unixfs node %q", c)
 	}
 
-	size, err := n.Size()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get size of %q", c)
-	}
-
 	return &sizeReaderAt{
-		size:   size,
+		size:   desc.Size,
 		reader: files.ToFile(n),
 	}, nil
 }
@@ -46,6 +40,7 @@ type sizeReaderAt struct {
 }
 
 func (ra *sizeReaderAt) ReadAt(p []byte, offset int64) (n int, err error) {
+	log.L.WithField("offset", offset).WithField("size", ra.size).Infof("(*sizeReaderAt).ReadAt")
 	if offset < ra.n {
 		return 0, errors.New("invalid offset")
 	}

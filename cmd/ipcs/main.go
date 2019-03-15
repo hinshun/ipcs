@@ -22,7 +22,7 @@ func initIPCSService(ic *plugin.InitContext) (interface{}, error) {
 		RootDir: ic.Root,
 	}
 
-	s, err := ipcs.New(c)
+	s, err := ipcs.NewContentStore(c)
 	if err != nil {
 		return nil, errors.Wrap(err, "ipcs: failed to create content store")
 	}

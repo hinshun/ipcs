@@ -18,7 +18,7 @@ type store struct {
 	cln    iface.CoreAPI
 }
 
-func New(config Config) (content.Store, error) {
+func NewContentStore(config Config) (content.Store, error) {
 	s, err := local.NewStore(config.RootDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create local content store")

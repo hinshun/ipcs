@@ -3,8 +3,10 @@ module github.com/hinshun/image2ipfs
 go 1.12
 
 require (
+	github.com/Microsoft/go-winio v0.4.12 // indirect
+	github.com/Microsoft/hcsshim v0.8.6 // indirect
 	github.com/containerd/aufs v0.0.0-20190114185352-f894a800659b
-	github.com/containerd/cgroups v0.0.0-20190226200435-dbea6f2bd416
+	github.com/containerd/cgroups v0.0.0-20190226200435-dbea6f2bd416 // indirect
 	github.com/containerd/console v0.0.0-20181022165439-0650fd9eeb50 // indirect
 	github.com/containerd/containerd v1.2.4
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
@@ -13,8 +15,8 @@ require (
 	github.com/containerd/ttrpc v0.0.0-20190211042230-69144327078c // indirect
 	github.com/containerd/typeurl v0.0.0-20190228175220-2a93cfde8c20 // indirect
 	github.com/containerd/zfs v0.0.0-20181107152433-31af176f2ae8
-	github.com/coreos/go-systemd v0.0.0-20161114122254-48702e0da86b
-	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
+	github.com/coreos/go-systemd v0.0.0-20161114122254-48702e0da86b // indirect
+	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible // indirect
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-events v0.0.0-20170721190031-9461782956ad // indirect
 	github.com/docker/go-metrics v0.0.0-20181218153428-b84716841b82 // indirect
@@ -33,7 +35,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/opencontainers/runc v0.1.1 // indirect
-	github.com/opencontainers/runtime-spec v0.1.2-0.20190207185410-29686dbc5559
+	github.com/opencontainers/runtime-spec v0.1.2-0.20190207185410-29686dbc5559 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2 // indirect
 	github.com/sirupsen/logrus v1.4.0 // indirect
