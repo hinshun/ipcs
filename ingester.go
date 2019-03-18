@@ -50,8 +50,6 @@ func (s *store) Writer(ctx context.Context, opts ...content.WriterOpt) (content.
 		errCh <- err
 	}()
 
-	panic(fmt.Sprintf("digest is: %s", wOpts.Desc.Digest))
-
 	return &writer{
 		expected:  wOpts.Desc.Digest,
 		startedAt: now,
