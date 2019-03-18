@@ -1,14 +1,14 @@
-root = "/home/edgarl/go/src/github.com/hinshun/image2ipfs/tmp/containerd/root"
-state = "/home/edgarl/go/src/github.com/hinshun/image2ipfs/tmp/containerd/state"
+root = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/root"
+state = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/state"
 oom_score = 0
 
 [grpc]
-  address = "/home/edgarl/go/src/github.com/hinshun/image2ipfs/tmp/containerd/containerd.sock"
+  address = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/containerd.sock"
   uid = 0
   gid = 0
 
 [debug]
-  address = "/home/edgarl/go/src/github.com/hinshun/image2ipfs/tmp/containerd/debug.sock"
+  address = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/debug.sock"
   uid = 0
   gid = 0
   level = "info"
@@ -28,7 +28,7 @@ oom_score = 0
   [plugins.linux]
     shim = "containerd-shim"
     runtime = "runc"
-    runtime_root = "/home/edgarl/go/src/github.com/hinshun/image2ipfs/tmp/containerd/runc"
+    runtime_root = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/runc"
     no_shim = false
     shim_debug = false
   [plugins.scheduler]

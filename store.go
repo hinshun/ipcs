@@ -10,28 +10,27 @@ import (
 
 type Config struct {
 	RootDir string
+	IpfsPath string
 }
 
 type store struct {
 	content.Store
-	config Config
 	cln    iface.CoreAPI
 }
 
-func NewContentStore(config Config) (content.Store, error) {
-	s, err := local.NewStore(config.RootDir)
+func NewContentStore(cfg Config) (content.Store, error) {
+	s, err := local.NewStore(cfg.RootDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create local content store")
 	}
 
-	cln, err := httpapi.NewLocalApi()
+	cln, err := httpapi.NewPathApi(cfg.IpfsPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create ipfs client")
 	}
 
 	return &store{
 		Store:  s,
-		config: config,
 		cln:    cln,
 	}, nil
 }

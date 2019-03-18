@@ -19,8 +19,7 @@ import (
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes/docker"
-	"github.com/hinshun/image2ipfs"
-	"github.com/hinshun/image2ipfs/ipcs"
+	"github.com/hinshun/ipcs"
 	httpapi "github.com/ipfs/go-ipfs-http-client"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/moby/buildkit/util/contentutil"
@@ -54,12 +53,12 @@ func run(ctx context.Context, src, dst string) error {
 		return errors.Wrap(err, "failed to create containerd client")
 	}
 
-	err = Pull(ctx, ipfsCln, ctrdCln, src)
+	err = Convert(ctx, ipfsCln, ctrdCln, src, dst)
 	if err != nil {
 		return errors.Wrap(err, "failed to convert to p2p manifest")
 	}
 
-	err = RunContainer(ctx, ctrdCln, src, "helloworld")
+	err = RunContainer(ctx, ctrdCln, dst, "helloworld")
 	if err != nil {
 		return errors.Wrap(err, "failed to run container")
 	}
@@ -83,32 +82,15 @@ func Convert(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *containerd.Cli
 		return errors.Wrapf(err, "failed to create fetcher for %q", src)
 	}
 
-	_, mfstDesc, err := image2ipfs.Convert(ctx, ipfsCln, contentutil.FromFetcher(fetcher), ctrdCln.ContentStore(), srcDesc)
+	converter := ipcs.NewConverter(ipfsCln, contentutil.FromFetcher(fetcher))
+	mfstDesc, err := converter.Convert(ctx, srcDesc)
 	if err != nil {
 		return errors.Wrapf(err, "failed to convert %q to ipfs manifest", srcName)
 	}
-	log.Printf("Converted %q manifest from %q to %q", srcName, srcDesc.Digest, mfstDesc.Digest)
 
-	dstImg := images.Image{
-		Name:   dst,
-		Target: mfstDesc,
-	}
-
-	dstImg, err = createImage(ctx, ctrdCln, dstImg)
+	err = PullByDescriptor(ctx, ipfsCln, ctrdCln, dst, mfstDesc)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create image %q", dstImg.Name)
-	}
-	log.Printf("Successfully created image %q", dstImg.Name)
-
-	p := []ocispec.Platform{platforms.DefaultSpec()}
-
-	for _, platform := range p {
-		log.Printf("Unpacking %q %q...\n", platforms.Format(platform), dstImg.Target.Digest)
-		i := containerd.NewImageWithPlatform(ctrdCln, dstImg, platforms.Only(platform))
-		err = i.Unpack(ctx, "native")
-		if err != nil {
-			return errors.Wrap(err, "failed to unpack image")
-		}
+		return errors.Wrapf(err, "failed to pull descriptor %q", mfstDesc.Digest)
 	}
 
 	return nil
@@ -167,11 +149,17 @@ func Pull(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *containerd.Client
 	desc := ocispec.Descriptor{
 		MediaType: ocispec.MediaTypeImageManifest,
 		Digest:    digest.Digest("sha256:c0ecc9c9fb27ebc68af1014d2f1962f1533fe606f2ed5963c61d066976ce8d5a"),
-		Size: 456,
+		Size:      456,
 	}
 
+	return PullByDescriptor(ctx, ipfsCln, ctrdCln, name, desc)
+}
+
+func PullByDescriptor(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *containerd.Client, name string, desc ocispec.Descriptor) error {
 	ingester := ctrdCln.ContentStore()
-	provider, err := ipcs.NewContentStore(ipcs.Config{RootDir: "./tmp/ipfs"})
+	provider, err := ipcs.NewContentStore(ipcs.Config{
+		IpfsPath: "./tmp/ipfs",
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to create ipcs")
 	}
@@ -267,8 +255,9 @@ func pushTag(ctx context.Context, cln *http.Client, r io.Reader, ref string, des
 
 	req, err := http.NewRequest(http.MethodPut, u.String(), nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to create http request")
+		return errors.Wrap(err, "failed to create http requestname, ")
 	}
+
 	req.Header.Add("Content-Type", desc.MediaType)
 	req.Body = ioutil.NopCloser(r)
 	req.ContentLength = desc.Size

@@ -2,18 +2,18 @@ GOOS?=linux
 GOARCH?=amd64
 
 convert:
-	@GO111MODULE=off IPFS_PATH=./tmp/ipfs go run ./cmd/convert docker.io/library/alpine:latest localhost:5000/library/alpine:p2p
+	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/convert docker.io/library/alpine:latest localhost:5000/library/alpine:p2p
 
 registry:
 	@docker run --rm -it --name registry -p 5000:5000 registry:latest
 
 ipcs:
 	@mkdir -p ./tmp/containerd/root/plugins
-	@GO111MODULE=off go build -buildmode=plugin -o ./tmp/containerd/root/plugins/ipcs-$(GOOS)-$(GOARCH).so cmd/ipcs/main.go
+	@GO111MODULE=on go build -buildmode=plugin -o ./tmp/containerd/root/plugins/ipcs-$(GOOS)-$(GOARCH).so cmd/ipcs/main.go
 
 containerd-binary:
 	@mkdir -p ./bin
-	@GO111MODULE=off go build -o ./bin/containerd ./cmd/containerd
+	@GO111MODULE=on go build -o ./bin/containerd ./cmd/containerd
 
 containerd: containerd-binary ipcs
 	@mkdir -p ./tmp

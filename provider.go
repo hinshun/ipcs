@@ -7,7 +7,7 @@ import (
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/log"
-	"github.com/hinshun/image2ipfs/util/digestconv"
+	"github.com/hinshun/ipcs/digestconv"
 	files "github.com/ipfs/go-ipfs-files"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"

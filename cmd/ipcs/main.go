@@ -1,8 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/containerd/containerd/plugin"
-	"github.com/hinshun/image2ipfs/ipcs"
+	"github.com/hinshun/ipcs"
+	httpapi "github.com/ipfs/go-ipfs-http-client"
 	"github.com/pkg/errors"
 )
 
@@ -18,8 +21,14 @@ func init() {
 func initIPCSService(ic *plugin.InitContext) (interface{}, error) {
 	ic.Meta.Exports["root"] = ic.Root
 
+	ipfsPath := os.Getenv(httpapi.EnvDir)
+	if ipfsPath == "" {
+		ipfsPath = httpapi.DefaultPathRoot
+	}
+
 	c := ipcs.Config{
-		RootDir: ic.Root,
+		RootDir:  ic.Root,
+		IpfsPath: ipfsPath,
 	}
 
 	s, err := ipcs.NewContentStore(c)
