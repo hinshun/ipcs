@@ -1,3 +1,6 @@
+ipcs
+---
+
 proxy.NewContentStore (content.Store)
 	-> content.ContentClient (gRPC client)
 		-> content.NewService (gRPC server: plugin.GRPCPlugin, "content")
