@@ -19,15 +19,12 @@ func init() {
 }
 
 func initIPCSService(ic *plugin.InitContext) (interface{}, error) {
-	ic.Meta.Exports["root"] = ic.Root
-
 	ipfsPath := os.Getenv(httpapi.EnvDir)
 	if ipfsPath == "" {
 		ipfsPath = httpapi.DefaultPathRoot
 	}
 
 	c := ipcs.Config{
-		RootDir:  ic.Root,
 		IpfsPath: ipfsPath,
 	}
 

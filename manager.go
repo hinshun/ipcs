@@ -42,17 +42,26 @@ func (s *store) Info(ctx context.Context, dgst digest.Digest) (content.Info, err
 	}, nil
 }
 
-// func (s *store) Update(ctx context.Context, info content.Info, fieldpaths ...string) (content.Info, error) {
-//     panic("Update")
-//     return content.Info{}, nil
-// }
+// Update updates mutable information related to content.
+// If one or more fieldpaths are provided, only those
+// fields will be updated.
+// Mutable fields:
+//  labels.*
+func (s *store) Update(ctx context.Context, info content.Info, fieldpaths ...string) (content.Info, error) {
+	panic("unimplemented")
+	return content.Info{}, nil
+}
 
-// func (s *store) Walk(ctx context.Context, fn content.WalkFunc, filters ...string) error {
-//     panic("Walk")
-//     return nil
-// }
+// Walk will call fn for each item in the content store which
+// match the provided filters. If no filters are given all
+// items will be walked.
+func (s *store) Walk(ctx context.Context, fn content.WalkFunc, filters ...string) error {
+	panic("unimplemented")
+	return nil
+}
 
-// func (s *store)  Delete(ctx context.Context, dgst digest.Digest) error {
-//     panic("Delete")
-//     return nil
-// }
+// Delete removes the content from the store.
+func (s *store) Delete(ctx context.Context, dgst digest.Digest) error {
+	panic("unimplemented")
+	return nil
+}

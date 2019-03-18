@@ -138,7 +138,7 @@ func (w *writer) Status() (content.Status, error) {
 
 // Truncate updates the size of the target blob
 func (w *writer) Truncate(size int64) error {
-	panic(fmt.Sprintf("Truncate %d", size))
+	panic("unimplemented")
 	w.offset = 0
 	return nil
 }

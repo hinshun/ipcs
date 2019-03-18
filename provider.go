@@ -14,6 +14,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ReaderAt only requires desc.Digest to be set.
+// Other fields in the descriptor may be used internally for resolving
+// the location of the actual data.
 func (s *store) ReaderAt(ctx context.Context, desc ocispec.Descriptor) (content.ReaderAt, error) {
 	log.L.WithField("desc.Digest", desc.Digest).Infof("ReaderAt")
 	c, err := digestconv.DigestToCid(desc.Digest)
