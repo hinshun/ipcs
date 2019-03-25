@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,6 +21,7 @@ import (
 	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/hinshun/ipcs"
+	"github.com/hinshun/ipcs/digestconv"
 	httpapi "github.com/ipfs/go-ipfs-http-client"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/moby/buildkit/util/contentutil"
@@ -169,6 +171,12 @@ func PullByDescriptor(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *conta
 		return errors.Wrap(err, "failed to get manifest")
 	}
 
+	mfstJSON, err := json.MarshalIndent(mfst, "", "   ")
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal manifest JSON")
+	}
+	log.Printf("Pulled Manifest [%d]:\n%s", len(mfstJSON), mfstJSON)
+
 	err = contentutil.Copy(ctx, ingester, provider, mfst.Config)
 	if err != nil {
 		return errors.Wrapf(err, "failed to ingest manifest config blob %q", mfst.Config.Digest)
@@ -195,10 +203,14 @@ func PullByDescriptor(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *conta
 	if err != nil {
 		return errors.Wrapf(err, "failed to create image %q", image.Name)
 	}
-	log.Printf("Successfully created image %q", image.Name)
+
+	c, err := digestconv.DigestToCid(image.Target.Digest)
+	if err != nil {
+		return errors.Wrapf(err, "failed to convert image digest %q to cid", image.Target.Digest)
+	}
+	log.Printf("Successfully created image %q (%s)", image.Target.Digest, c)
 
 	p := []ocispec.Platform{platforms.DefaultSpec()}
-
 	for _, platform := range p {
 		log.Printf("Unpacking %q %q...\n", platforms.Format(platform), image.Target.Digest)
 		i := containerd.NewImageWithPlatform(ctrdCln, image, platforms.Only(platform))

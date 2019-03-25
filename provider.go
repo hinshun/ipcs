@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 
 	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/log"
 	"github.com/hinshun/ipcs/digestconv"
 	files "github.com/ipfs/go-ipfs-files"
 	iface "github.com/ipfs/interface-go-ipfs-core"
@@ -18,13 +17,11 @@ import (
 // Other fields in the descriptor may be used internally for resolving
 // the location of the actual data.
 func (s *store) ReaderAt(ctx context.Context, desc ocispec.Descriptor) (content.ReaderAt, error) {
-	log.L.WithField("desc.Digest", desc.Digest).Infof("ReaderAt")
 	c, err := digestconv.DigestToCid(desc.Digest)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to convert digest '%s' to cid", desc.Digest)
 	}
 
-	log.L.WithField("c", c.String()).Infof("Unixfs.Get")
 	n, err := s.cln.Unixfs().Get(ctx, iface.IpfsPath(c))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get unixfs node %q", c)
@@ -43,7 +40,6 @@ type sizeReaderAt struct {
 }
 
 func (ra *sizeReaderAt) ReadAt(p []byte, offset int64) (n int, err error) {
-	log.L.WithField("offset", offset).WithField("size", ra.size).Infof("(*sizeReaderAt).ReadAt")
 	if offset < ra.n {
 		return 0, errors.New("invalid offset")
 	}

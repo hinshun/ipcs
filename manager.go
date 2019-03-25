@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/containerd/containerd/content"
-	"github.com/containerd/containerd/log"
 	"github.com/hinshun/ipcs/digestconv"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	digest "github.com/opencontainers/go-digest"
@@ -16,13 +15,11 @@ import (
 //
 // If the content is not present, ErrNotFound will be returned.
 func (s *store) Info(ctx context.Context, dgst digest.Digest) (content.Info, error) {
-	log.L.WithField("dgst", dgst).Infof("Info")
 	c, err := digestconv.DigestToCid(dgst)
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to convert digest %q to cid", dgst)
 	}
 
-	log.L.WithField("c", c.String()).Infof("Unixfs.Get")
 	n, err := s.cln.Unixfs().Get(ctx, iface.IpfsPath(c))
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to get unixfs node %q", c)
@@ -56,12 +53,43 @@ func (s *store) Update(ctx context.Context, info content.Info, fieldpaths ...str
 // match the provided filters. If no filters are given all
 // items will be walked.
 func (s *store) Walk(ctx context.Context, fn content.WalkFunc, filters ...string) error {
-	panic("unimplemented")
+	pins, err := s.cln.Pin().Ls(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to list ipfs pins")
+	}
+
+	for _, pin := range pins {
+		c := pin.Path().Cid()
+		dgst, err := digestconv.CidToDigest(c)
+		if err != nil {
+			return errors.Wrap(err, "failed to convert digest")
+		}
+
+		info, err := s.Info(ctx, dgst)
+		if err != nil {
+			return errors.Wrap(err, "failed to get info")
+		}
+
+		err = fn(info)
+		if err != nil {
+			return errors.Wrap(err, "failed to walk info")
+		}
+	}
+
 	return nil
 }
 
 // Delete removes the content from the store.
 func (s *store) Delete(ctx context.Context, dgst digest.Digest) error {
-	panic("unimplemented")
+	c, err := digestconv.DigestToCid(dgst)
+	if err != nil {
+		return errors.Wrap(err, "failed to convert digest")
+	}
+
+	err = s.cln.Pin().Rm(ctx, iface.IpfsPath(c))
+	if err != nil {
+		return errors.Wrap(err, "failed to remove pin")
+	}
+
 	return nil
 }

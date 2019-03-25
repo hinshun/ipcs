@@ -2,13 +2,11 @@ package ipcs
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"time"
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/errdefs"
-	"github.com/containerd/containerd/log"
 	"github.com/hinshun/ipcs/digestconv"
 	files "github.com/ipfs/go-ipfs-files"
 	iface "github.com/ipfs/interface-go-ipfs-core"
@@ -24,60 +22,47 @@ func (s *store) Writer(ctx context.Context, opts ...content.WriterOpt) (content.
 		}
 	}
 
-	log.L.WithField("desc.Digest", wOpts.Desc.Digest).Infof("Writer")
 	if wOpts.Desc.Digest != "" {
 		c, err := digestconv.DigestToCid(wOpts.Desc.Digest)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to convert digest '%s' to cid", wOpts.Desc.Digest)
 		}
 
-		log.L.WithField("c", c.String()).Infof("Unixfs.Get")
 		_, err = s.cln.Unixfs().Get(ctx, iface.IpfsPath(c))
 		if err == nil {
 			return nil, errors.Wrapf(errdefs.ErrAlreadyExists, "content %v", wOpts.Desc.Digest)
 		}
 	}
 
-	r, w := io.Pipe()
-	errCh := make(chan error, 1)
+	w := &writer{
+		ctx:      ctx,
+		cln:      s.cln,
+		ref:      wOpts.Ref,
+		total:    wOpts.Desc.Size,
+		expected: wOpts.Desc.Digest,
+	}
 
-	now := time.Now()
-	addCtx, cancel := context.WithCancel(ctx)
+	err := w.Truncate(0)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to truncate writer")
+	}
 
-	go func() {
-		defer close(errCh)
-		_, err := s.cln.Unixfs().Add(addCtx, files.NewReaderFile(r))
-		errCh <- err
-	}()
-
-	return &writer{
-		expected:  wOpts.Desc.Digest,
-		startedAt: now,
-		updatedAt: now,
-		pw:        w,
-		cancel: func() error {
-			cancel()
-			err := w.Close()
-			if err != nil {
-				return err
-			}
-
-			return r.Close()
-		},
-		errCh: errCh,
-	}, nil
+	return w, nil
 }
 
 type writer struct {
+	ctx       context.Context
+	cln       iface.CoreAPI
 	ref       string
 	offset    int64
 	total     int64
+	committed bool
 	expected  digest.Digest
 	startedAt time.Time
 	updatedAt time.Time
 	pw        io.Writer
+	ipfsErr   error
 	cancel    func() error
-	errCh     chan error
 }
 
 // Write writes len(p) bytes from p to the underlying data stream.
@@ -88,16 +73,14 @@ type writer struct {
 //
 // Implementations must not retain p.
 func (w *writer) Write(p []byte) (n int, err error) {
-	select {
-	case err := <-w.errCh:
-		return 0, err
-	default:
-		n, err = w.pw.Write(p)
-		w.offset += int64(len(p))
-		w.updatedAt = time.Now()
-		return n, err
+	if w.ipfsErr != nil {
+		return 0, w.ipfsErr
 	}
 
+	n, err = w.pw.Write(p)
+	w.offset += int64(len(p))
+	w.updatedAt = time.Now()
+	return n, err
 }
 
 // Close closes the writer, if the writer has not been
@@ -109,7 +92,11 @@ func (w *writer) Close() error {
 
 // Digest may return empty digest or panics until committed.
 func (w *writer) Digest() digest.Digest {
-	return w.expected
+	if w.committed {
+		return w.expected
+	}
+
+	return ""
 }
 
 // Commit commits the blob (but no roll-back is guaranteed on an error).
@@ -118,8 +105,14 @@ func (w *writer) Digest() digest.Digest {
 // ErrAlreadyExists aborts the writer.
 func (w *writer) Commit(ctx context.Context, size int64, expected digest.Digest, opts ...content.Opt) error {
 	if size > 0 && size != w.offset {
-		return errors.Errorf("unexpected commit size %d, expected %d", w.offset, size)
+		return errors.Wrapf(errdefs.ErrFailedPrecondition, "unexpected commit size %d, expected %d", w.offset, size)
 	}
+
+	if expected != "" && expected != w.expected {
+		return errors.Wrapf(errdefs.ErrFailedPrecondition, "unexpected commit digest %s, expected %s", w.expected, expected)
+	}
+
+	w.committed = true
 	return w.Close()
 }
 
@@ -136,7 +129,38 @@ func (w *writer) Status() (content.Status, error) {
 
 // Truncate updates the size of the target blob
 func (w *writer) Truncate(size int64) error {
-	panic("unimplemented")
+	if size != 0 {
+		return errors.New("Truncate: unsupported size")
+	}
+
+	if w.cancel != nil {
+		err := w.cancel()
+		if err != nil {
+			return err
+		}
+	}
+
+	var r io.ReadCloser
+	r, w.pw = io.Pipe()
+	ctx, cancel := context.WithCancel(w.ctx)
+	w.ipfsErr = nil
+	go func() {
+		_, w.ipfsErr = w.cln.Unixfs().Add(ctx, files.NewReaderFile(r))
+	}()
+
+	w.cancel = func() error {
+		cancel()
+		err := w.Close()
+		if err != nil {
+			return err
+		}
+
+		return r.Close()
+	}
+
+	now := time.Now()
+	w.startedAt = now
+	w.updatedAt = now
 	w.offset = 0
 	return nil
 }
