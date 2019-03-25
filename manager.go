@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/containerd/containerd/content"
+	"github.com/containerd/containerd/errdefs"
 	"github.com/hinshun/ipcs/digestconv"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	digest "github.com/opencontainers/go-digest"
@@ -45,8 +46,7 @@ func (s *store) Info(ctx context.Context, dgst digest.Digest) (content.Info, err
 // Mutable fields:
 //  labels.*
 func (s *store) Update(ctx context.Context, info content.Info, fieldpaths ...string) (content.Info, error) {
-	panic("unimplemented")
-	return content.Info{}, nil
+	return content.Info{}, errors.Wrapf(errdefs.ErrFailedPrecondition, "update not supported on immutable content store")
 }
 
 // Walk will call fn for each item in the content store which
