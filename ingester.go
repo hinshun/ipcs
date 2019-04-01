@@ -10,6 +10,7 @@ import (
 	"github.com/hinshun/ipcs/digestconv"
 	files "github.com/ipfs/go-ipfs-files"
 	iface "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/ipfs/interface-go-ipfs-core/options"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 )
@@ -35,11 +36,10 @@ func (s *store) Writer(ctx context.Context, opts ...content.WriterOpt) (content.
 	}
 
 	w := &writer{
-		ctx:      ctx,
-		cln:      s.cln,
-		ref:      wOpts.Ref,
-		total:    wOpts.Desc.Size,
-		expected: wOpts.Desc.Digest,
+		ctx:   ctx,
+		cln:   s.cln,
+		ref:   wOpts.Ref,
+		total: wOpts.Desc.Size,
 	}
 
 	err := w.Truncate(0)
@@ -56,8 +56,7 @@ type writer struct {
 	ref       string
 	offset    int64
 	total     int64
-	committed bool
-	expected  digest.Digest
+	dgst      digest.Digest
 	startedAt time.Time
 	updatedAt time.Time
 	pw        io.Writer
@@ -92,11 +91,7 @@ func (w *writer) Close() error {
 
 // Digest may return empty digest or panics until committed.
 func (w *writer) Digest() digest.Digest {
-	if w.committed {
-		return w.expected
-	}
-
-	return ""
+	return w.dgst
 }
 
 // Commit commits the blob (but no roll-back is guaranteed on an error).
@@ -108,11 +103,10 @@ func (w *writer) Commit(ctx context.Context, size int64, expected digest.Digest,
 		return errors.Wrapf(errdefs.ErrFailedPrecondition, "unexpected commit size %d, expected %d", w.offset, size)
 	}
 
-	if expected != "" && expected != w.expected {
-		return errors.Wrapf(errdefs.ErrFailedPrecondition, "unexpected commit digest %s, expected %s", w.expected, expected)
+	if expected != "" && expected != w.dgst {
+		return errors.Wrapf(errdefs.ErrFailedPrecondition, "unexpected commit digest %s, expected %s", w.dgst, expected)
 	}
 
-	w.committed = true
 	return w.Close()
 }
 
@@ -145,7 +139,19 @@ func (w *writer) Truncate(size int64) error {
 	ctx, cancel := context.WithCancel(w.ctx)
 	w.ipfsErr = nil
 	go func() {
-		_, w.ipfsErr = w.cln.Unixfs().Add(ctx, files.NewReaderFile(r))
+		p, err := w.cln.Unixfs().Add(ctx, files.NewReaderFile(r), options.Unixfs.Pin(true))
+		if err != nil {
+			w.ipfsErr = err
+			return
+		}
+
+		dgst, err := digestconv.CidToDigest(p.Cid())
+		if err != nil {
+			w.ipfsErr = err
+			return
+		}
+
+		w.dgst = dgst
 	}()
 
 	w.cancel = func() error {

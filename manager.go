@@ -8,6 +8,7 @@ import (
 	"github.com/containerd/containerd/errdefs"
 	"github.com/hinshun/ipcs/digestconv"
 	iface "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/ipfs/interface-go-ipfs-core/options"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 )
@@ -53,7 +54,12 @@ func (s *store) Update(ctx context.Context, info content.Info, fieldpaths ...str
 // match the provided filters. If no filters are given all
 // items will be walked.
 func (s *store) Walk(ctx context.Context, fn content.WalkFunc, filters ...string) error {
-	pins, err := s.cln.Pin().Ls(ctx)
+	// TODO: Filters are also not supported in containerd's local store.
+	// Since we replace the local store, and filters are implemented in the boltdb
+	// metadata that wraps the local store, we can wait until upstream supports
+	// it too.
+
+	pins, err := s.cln.Pin().Ls(ctx, options.Pin.Type.All())
 	if err != nil {
 		return errors.Wrap(err, "failed to list ipfs pins")
 	}
@@ -86,7 +92,9 @@ func (s *store) Delete(ctx context.Context, dgst digest.Digest) error {
 		return errors.Wrap(err, "failed to convert digest")
 	}
 
-	err = s.cln.Pin().Rm(ctx, iface.IpfsPath(c))
+	// Recursively removing a pin will not remove shared chunks because IPFS has
+	// its internal refcounting. This will expose the unpinned blobs to IPFS GC.
+	err = s.cln.Pin().Rm(ctx, iface.IpfsPath(c), options.Pin.RmRecursive(true))
 	if err != nil {
 		return errors.Wrap(err, "failed to remove pin")
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/hinshun/ipcs/digestconv"
 	files "github.com/ipfs/go-ipfs-files"
 	iface "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/ipfs/interface-go-ipfs-core/options"
 	digest "github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
@@ -91,7 +92,7 @@ func copyFile(ctx context.Context, cln iface.CoreAPI, provider content.Provider,
 }
 
 func addFile(ctx context.Context, cln iface.CoreAPI, n files.Node) (digest.Digest, error) {
-	p, err := cln.Unixfs().Add(ctx, n)
+	p, err := cln.Unixfs().Add(ctx, n, options.Unixfs.Pin(true))
 	if err != nil {
 		return "", errors.Wrap(err, "failed to put blob to ipfs")
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -170,12 +169,6 @@ func PullByDescriptor(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *conta
 	if err != nil {
 		return errors.Wrap(err, "failed to get manifest")
 	}
-
-	mfstJSON, err := json.MarshalIndent(mfst, "", "   ")
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal manifest JSON")
-	}
-	log.Printf("Pulled Manifest [%d]:\n%s", len(mfstJSON), mfstJSON)
 
 	err = contentutil.Copy(ctx, ingester, provider, mfst.Config)
 	if err != nil {
