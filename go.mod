@@ -5,12 +5,13 @@ go 1.12
 require (
 	github.com/Microsoft/go-winio v0.4.12 // indirect
 	github.com/Microsoft/hcsshim v0.8.6 // indirect
+	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
+	github.com/btcsuite/btcd v0.0.0-20190315201642-aa6e0f35703c // indirect
 	github.com/containerd/aufs v0.0.0-20190114185352-f894a800659b
 	github.com/containerd/cgroups v0.0.0-20190226200435-dbea6f2bd416 // indirect
 	github.com/containerd/console v0.0.0-20181022165439-0650fd9eeb50 // indirect
 	github.com/containerd/containerd v1.2.4
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
-	github.com/containerd/cri v1.11.1 // indirect
 	github.com/containerd/fifo v0.0.0-20190226154929-a9fb20d87448 // indirect
 	github.com/containerd/go-runc v0.0.0-20190226155025-7d11b49dc076 // indirect
 	github.com/containerd/ttrpc v0.0.0-20190211042230-69144327078c // indirect
@@ -24,16 +25,23 @@ require (
 	github.com/docker/go-units v0.3.3 // indirect
 	github.com/godbus/dbus v4.1.0+incompatible // indirect
 	github.com/gogo/googleapis v1.1.0 // indirect
-	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
+	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/ipfs/go-cid v0.0.1
 	github.com/ipfs/go-ipfs-files v0.0.1
 	github.com/ipfs/go-ipfs-http-client v0.0.1
 	github.com/ipfs/go-ipfs-util v0.0.1
 	github.com/ipfs/interface-go-ipfs-core v0.0.1
+	github.com/libp2p/go-flow-metrics v0.2.0 // indirect
+	github.com/libp2p/go-libp2p-crypto v2.0.1+incompatible // indirect
+	github.com/libp2p/go-libp2p-metrics v2.1.7+incompatible // indirect
+	github.com/libp2p/go-libp2p-peer v2.4.0+incompatible // indirect
+	github.com/libp2p/go-libp2p-protocol v1.0.0 // indirect
 	github.com/mistifyio/go-zfs v2.1.1+incompatible // indirect
 	github.com/moby/buildkit v0.3.3
-	github.com/multiformats/go-multihash v0.0.1
+	github.com/multiformats/go-multiaddr v0.0.2 // indirect
+	github.com/multiformats/go-multiaddr-net v1.6.3 // indirect
+	github.com/multiformats/go-multihash v1.0.8
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/opencontainers/runc v0.1.1 // indirect
@@ -44,10 +52,6 @@ require (
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
-	golang.org/x/net v0.0.0-20190227160552-c95aed5357e7
 	google.golang.org/grpc v1.19.0 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
-	k8s.io/apimachinery v0.0.0-20190313115320-c9defaaddf6f // indirect
-	k8s.io/klog v0.2.0 // indirect
-	k8s.io/kubernetes v1.13.4 // indirect
+	gotest.tools v2.2.0+incompatible // indirect
 )

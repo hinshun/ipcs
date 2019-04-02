@@ -43,13 +43,13 @@ func (c *converter) Convert(ctx context.Context, desc ocispec.Descriptor) (ocisp
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrap(err, "failed to marshal manifest JSON")
 	}
-	log.Printf("Original Manifest [%d]:\n%s", len(origMfstJSON), origMfstJSON)
+	log.Printf("Original Manifest [%d] %s:\n%s", len(origMfstJSON), desc.Digest, origMfstJSON)
 
 	origMfstConfigJSON, err := content.ReadBlob(ctx, c.provider, mfst.Config)
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrap(err, "failed to get original manifest config JSON")
 	}
-	log.Printf("Original Manifest Config [%d]:\n%s", len(origMfstConfigJSON), origMfstConfigJSON)
+	log.Printf("Original Manifest Config [%d] %s:\n%s", len(origMfstConfigJSON), mfst.Config.Digest, origMfstConfigJSON)
 
 	mfst.Config.Digest, err = copyFile(ctx, c.cln, c.provider, mfst.Config)
 	if err != nil {
@@ -67,12 +67,12 @@ func (c *converter) Convert(ctx context.Context, desc ocispec.Descriptor) (ocisp
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrap(err, "failed to marshal manifest JSON")
 	}
-	log.Printf("Converted Manifest [%d]:\n%s", len(mfstJSON), mfstJSON)
 
 	mfstDigest, err := addFile(ctx, c.cln, files.NewBytesFile(mfstJSON))
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrap(err, "failed to upload manifest")
 	}
+	log.Printf("Converted Manifest [%d] %s:\n%s", len(mfstJSON), mfstDigest, mfstJSON)
 
 	return ocispec.Descriptor{
 		MediaType: ocispec.MediaTypeImageManifest,
