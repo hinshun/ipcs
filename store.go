@@ -25,3 +25,7 @@ func NewContentStore(cfg Config) (content.Store, error) {
 		cln: cln,
 	}, nil
 }
+
+func NewContentStoreFromCoreAPI(cln iface.CoreAPI) content.Store {
+	return &store{cln}
+}
