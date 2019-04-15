@@ -28,10 +28,10 @@ require (
 	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/ipfs/go-cid v0.0.1
-	github.com/ipfs/go-ipfs-files v0.0.1
-	github.com/ipfs/go-ipfs-http-client v0.0.1
+	github.com/ipfs/go-ipfs-files v0.0.2
+	github.com/ipfs/go-ipfs-http-client v0.0.0-20190403200027-7f260a2e4a2f
 	github.com/ipfs/go-ipfs-util v0.0.1
-	github.com/ipfs/interface-go-ipfs-core v0.0.1
+	github.com/ipfs/interface-go-ipfs-core v0.0.6
 	github.com/mistifyio/go-zfs v2.1.1+incompatible // indirect
 	github.com/moby/buildkit v0.3.3
 	github.com/multiformats/go-multiaddr v0.0.2 // indirect
