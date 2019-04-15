@@ -32,16 +32,10 @@ require (
 	github.com/ipfs/go-ipfs-http-client v0.0.1
 	github.com/ipfs/go-ipfs-util v0.0.1
 	github.com/ipfs/interface-go-ipfs-core v0.0.1
-	github.com/libp2p/go-flow-metrics v0.2.0 // indirect
-	github.com/libp2p/go-libp2p-crypto v2.0.1+incompatible // indirect
-	github.com/libp2p/go-libp2p-metrics v2.1.7+incompatible // indirect
-	github.com/libp2p/go-libp2p-peer v2.4.0+incompatible // indirect
-	github.com/libp2p/go-libp2p-protocol v1.0.0 // indirect
 	github.com/mistifyio/go-zfs v2.1.1+incompatible // indirect
 	github.com/moby/buildkit v0.3.3
 	github.com/multiformats/go-multiaddr v0.0.2 // indirect
-	github.com/multiformats/go-multiaddr-net v1.6.3 // indirect
-	github.com/multiformats/go-multihash v1.0.8
+	github.com/multiformats/go-multihash v0.0.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/opencontainers/runc v0.1.1 // indirect
