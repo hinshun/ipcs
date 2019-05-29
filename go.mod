@@ -10,7 +10,7 @@ require (
 	github.com/containerd/aufs v0.0.0-20190114185352-f894a800659b
 	github.com/containerd/cgroups v0.0.0-20190226200435-dbea6f2bd416 // indirect
 	github.com/containerd/console v0.0.0-20181022165439-0650fd9eeb50 // indirect
-	github.com/containerd/containerd v1.2.4
+	github.com/containerd/containerd v1.2.6
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
 	github.com/containerd/fifo v0.0.0-20190226154929-a9fb20d87448 // indirect
 	github.com/containerd/go-runc v0.0.0-20190226155025-7d11b49dc076 // indirect
@@ -27,11 +27,11 @@ require (
 	github.com/gogo/googleapis v1.1.0 // indirect
 	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
-	github.com/ipfs/go-cid v0.0.1
-	github.com/ipfs/go-ipfs-files v0.0.2
-	github.com/ipfs/go-ipfs-http-client v0.0.0-20190403200027-7f260a2e4a2f
+	github.com/ipfs/go-cid v0.0.2
+	github.com/ipfs/go-ipfs-files v0.0.3
+	github.com/ipfs/go-ipfs-http-client v0.0.2
 	github.com/ipfs/go-ipfs-util v0.0.1
-	github.com/ipfs/interface-go-ipfs-core v0.0.6
+	github.com/ipfs/interface-go-ipfs-core v0.0.8
 	github.com/mistifyio/go-zfs v2.1.1+incompatible // indirect
 	github.com/moby/buildkit v0.3.3
 	github.com/multiformats/go-multiaddr v0.0.2 // indirect

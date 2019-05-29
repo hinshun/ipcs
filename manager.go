@@ -7,8 +7,8 @@ import (
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/errdefs"
 	"github.com/hinshun/ipcs/digestconv"
-	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/options"
+	"github.com/ipfs/interface-go-ipfs-core/path"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 )
@@ -22,7 +22,7 @@ func (s *store) Info(ctx context.Context, dgst digest.Digest) (content.Info, err
 		return content.Info{}, errors.Wrapf(err, "failed to convert digest %q to cid", dgst)
 	}
 
-	n, err := s.cln.Unixfs().Get(ctx, iface.IpfsPath(c))
+	n, err := s.cln.Unixfs().Get(ctx, path.IpfsPath(c))
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to get unixfs node %q", c)
 	}
@@ -94,7 +94,7 @@ func (s *store) Delete(ctx context.Context, dgst digest.Digest) error {
 
 	// Recursively removing a pin will not remove shared chunks because IPFS has
 	// its internal refcounting. This will expose the unpinned blobs to IPFS GC.
-	err = s.cln.Pin().Rm(ctx, iface.IpfsPath(c), options.Pin.RmRecursive(true))
+	err = s.cln.Pin().Rm(ctx, path.IpfsPath(c), options.Pin.RmRecursive(true))
 	if err != nil {
 		return errors.Wrap(err, "failed to remove pin")
 	}

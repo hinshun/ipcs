@@ -8,7 +8,7 @@ import (
 	"github.com/containerd/containerd/content"
 	"github.com/hinshun/ipcs/digestconv"
 	files "github.com/ipfs/go-ipfs-files"
-	iface "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/ipfs/interface-go-ipfs-core/path"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
@@ -22,7 +22,7 @@ func (s *store) ReaderAt(ctx context.Context, desc ocispec.Descriptor) (content.
 		return nil, errors.Wrapf(err, "failed to convert digest '%s' to cid", desc.Digest)
 	}
 
-	n, err := s.cln.Unixfs().Get(ctx, iface.IpfsPath(c))
+	n, err := s.cln.Unixfs().Get(ctx, path.IpfsPath(c))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get unixfs node %q", c)
 	}

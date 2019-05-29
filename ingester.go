@@ -11,6 +11,7 @@ import (
 	files "github.com/ipfs/go-ipfs-files"
 	iface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/options"
+	"github.com/ipfs/interface-go-ipfs-core/path"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 )
@@ -29,7 +30,7 @@ func (s *store) Writer(ctx context.Context, opts ...content.WriterOpt) (content.
 			return nil, errors.Wrapf(err, "failed to convert digest '%s' to cid", wOpts.Desc.Digest)
 		}
 
-		_, err = s.cln.Unixfs().Get(ctx, iface.IpfsPath(c))
+		_, err = s.cln.Unixfs().Get(ctx, path.IpfsPath(c))
 		if err == nil {
 			return nil, errors.Wrapf(errdefs.ErrAlreadyExists, "content %v", wOpts.Desc.Digest)
 		}
