@@ -32,13 +32,13 @@ func NewClient(ipfsCln iface.CoreAPI, ctrdCln *containerd.Client) *Client {
 func (c *Client) Pull(ctx context.Context, ref string, desc ocispec.Descriptor) (containerd.Image, error) {
 	ctx, done, err := c.ctrdCln.WithLease(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to create lease on context")
 	}
 	defer done(ctx)
 
 	img, err := c.Fetch(ctx, ref, desc)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to fetch image")
 	}
 
 	i := containerd.NewImageWithPlatform(c.ctrdCln, img, platforms.Default())

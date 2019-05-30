@@ -49,3 +49,5 @@ require (
 	google.golang.org/grpc v1.19.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 )
+
+replace github.com/containerd/containerd => github.com/hinshun/containerd v0.2.1-0.20190530174427-aaba27cfa145

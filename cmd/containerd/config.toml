@@ -1,6 +1,7 @@
 root = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/root"
 state = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/state"
 oom_score = 0
+disabled_plugins = ["content"]
 
 [grpc]
   address = "/home/edgarl/go/src/github.com/hinshun/ipcs/tmp/containerd/containerd.sock"

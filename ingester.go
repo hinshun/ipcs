@@ -78,7 +78,7 @@ func (w *writer) Write(p []byte) (n int, err error) {
 	}
 
 	n, err = w.pw.Write(p)
-	w.offset += int64(len(p))
+	w.offset += int64(n)
 	w.updatedAt = time.Now()
 	return n, err
 }
@@ -137,8 +137,8 @@ func (w *writer) Truncate(size int64) error {
 
 	var r io.ReadCloser
 	r, w.pw = io.Pipe()
+
 	ctx, cancel := context.WithCancel(w.ctx)
-	w.ipfsErr = nil
 	go func() {
 		p, err := w.cln.Unixfs().Add(ctx, files.NewReaderFile(r), options.Unixfs.Pin(true))
 		if err != nil {
@@ -157,6 +157,8 @@ func (w *writer) Truncate(size int64) error {
 
 	w.cancel = func() error {
 		cancel()
+		w.ipfsErr = nil
+
 		err := w.Close()
 		if err != nil {
 			return err

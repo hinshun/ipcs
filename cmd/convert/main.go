@@ -46,10 +46,10 @@ func run(ctx context.Context, src, dst string) error {
 		return errors.Wrap(err, "failed to convert to p2p manifest")
 	}
 
-	err = RunContainer(ctx, ctrdCln, dst, "helloworld")
-	if err != nil {
-		return errors.Wrap(err, "failed to run container")
-	}
+	// err = RunContainer(ctx, ctrdCln, dst, "helloworld")
+	// if err != nil {
+	// 	return errors.Wrap(err, "failed to run container")
+	// }
 
 	return nil
 }
