@@ -3,6 +3,7 @@ package ipcs
 import (
 	"context"
 	"io"
+	"io/ioutil"
 
 	"github.com/containerd/containerd/content"
 	"github.com/hinshun/ipcs/digestconv"
@@ -27,26 +28,30 @@ func (s *store) ReaderAt(ctx context.Context, desc ocispec.Descriptor) (content.
 	}
 
 	return &sizeReaderAt{
-		size: desc.Size,
-		rs:   files.ToFile(n),
+		size:   desc.Size,
+		reader: files.ToFile(n),
 	}, nil
 }
 
 type sizeReaderAt struct {
-	size int64
-	rs   io.ReadSeeker
+	size   int64
+	reader io.Reader
+	n      int64
 }
 
 func (ra *sizeReaderAt) ReadAt(p []byte, offset int64) (n int, err error) {
-	_, err = ra.rs.Seek(offset, io.SeekCurrent)
+	if offset < ra.n {
+		return 0, errors.New("invalid offset")
+	}
+	diff := offset - ra.n
+	written, err := io.CopyN(ioutil.Discard, ra.reader, diff)
+	ra.n += written
 	if err != nil {
-		return 0, err
+		return int(written), err
 	}
 
-	n, err = ra.rs.Read(p)
-	if err == io.EOF {
-		err = nil
-	}
+	n, err = ra.reader.Read(p)
+	ra.n += int64(n)
 	return
 }
 

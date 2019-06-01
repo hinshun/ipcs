@@ -54,7 +54,7 @@ func (c *converter) Convert(ctx context.Context, desc ocispec.Descriptor) (ocisp
 	mfst.Config.Digest, err = copyFile(ctx, c.cln, c.provider, mfst.Config)
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrapf(err, "failed to upload manifest config blob %q", mfst.Config.Digest)
-	}
+}
 
 	for i, layer := range mfst.Layers {
 		mfst.Layers[i].Digest, err = copyFile(ctx, c.cln, c.provider, layer)
