@@ -34,14 +34,14 @@ require (
 	github.com/ipfs/interface-go-ipfs-core v0.0.8
 	github.com/mistifyio/go-zfs v2.1.1+incompatible // indirect
 	github.com/moby/buildkit v0.3.3
-	github.com/multiformats/go-multiaddr v0.0.2 // indirect
-	github.com/multiformats/go-multihash v0.0.1
+	github.com/multiformats/go-multiaddr v0.0.4 // indirect
+	github.com/multiformats/go-multihash v0.0.5
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/opencontainers/runtime-spec v0.1.2-0.20190207185410-29686dbc5559
 	github.com/pkg/errors v0.8.1
-	github.com/prometheus/client_golang v0.9.2 // indirect
+	github.com/prometheus/client_golang v0.9.3 // indirect
 	github.com/sirupsen/logrus v1.4.0 // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
