@@ -43,9 +43,9 @@ func (c *Client) Pull(ctx context.Context, ref string, desc ocispec.Descriptor) 
 
 	i := containerd.NewImageWithPlatform(c.ctrdCln, img, platforms.Default())
 
-	if err := i.Unpack(ctx, containerd.DefaultSnapshotter); err != nil {
-		return nil, errors.Wrapf(err, "failed to unpack image on snapshotter %s", containerd.DefaultSnapshotter)
-	}
+	// if err := i.Unpack(ctx, containerd.DefaultSnapshotter); err != nil {
+	// 	return nil, errors.Wrapf(err, "failed to unpack image on snapshotter %s", containerd.DefaultSnapshotter)
+	// }
 
 	return i, nil
 }
