@@ -31,6 +31,7 @@ require (
 	github.com/ipfs/go-ipfs-files v0.0.3
 	github.com/ipfs/go-ipfs-http-client v0.0.2
 	github.com/ipfs/go-ipfs-util v0.0.1
+	github.com/ipfs/go-merkledag v0.0.3
 	github.com/ipfs/interface-go-ipfs-core v0.0.8
 	github.com/mistifyio/go-zfs v2.1.1+incompatible // indirect
 	github.com/moby/buildkit v0.3.3
@@ -46,6 +47,7 @@ require (
 	github.com/stretchr/testify v1.3.0
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
+	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 	google.golang.org/grpc v1.19.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 )

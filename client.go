@@ -2,13 +2,16 @@ package ipcs
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/remotes"
+	"github.com/hinshun/ipcs/digestconv"
 	iface "github.com/ipfs/interface-go-ipfs-core"
+	"github.com/ipfs/interface-go-ipfs-core/path"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
@@ -23,8 +26,8 @@ func NewClient(ipfsCln iface.CoreAPI, ctrdCln *containerd.Client) *Client {
 	return &Client{
 		ipfsCln: ipfsCln,
 		ctrdCln: ctrdCln,
-		ipcs:    &store{
-    			cln: ipfsCln,
+		ipcs: &store{
+			cln: ipfsCln,
 		},
 	}
 }
@@ -64,6 +67,7 @@ func (c *Client) Fetch(ctx context.Context, ref string, desc ocispec.Descriptor)
 	childrenHandler = images.LimitManifests(childrenHandler, platforms.Default(), 1)
 
 	handler := images.Handlers(
+		PinHandler(c.ipfsCln),
 		remotes.FetchHandler(store, fetcher),
 		childrenHandler,
 	)
@@ -103,5 +107,33 @@ func (c *Client) Fetch(ctx context.Context, ref string, desc ocispec.Descriptor)
 }
 
 func (c *Client) Push(ctx context.Context, ref string, desc ocispec.Descriptor) error {
+	return nil
+}
+
+// PinHandler returns a handler that will recursive pin all content discovered
+// in a call to Dispatch. Use with ChildrenHandler to do a full recursive pin.
+func PinHandler(ipfsCln iface.CoreAPI) images.HandlerFunc {
+	return func(ctx context.Context, desc ocispec.Descriptor) (subdescs []ocispec.Descriptor, err error) {
+		switch desc.MediaType {
+		case images.MediaTypeDockerSchema1Manifest:
+			return nil, fmt.Errorf("%v not supported", desc.MediaType)
+		default:
+			err := pin(ctx, ipfsCln, desc)
+			return nil, err
+		}
+	}
+}
+
+func pin(ctx context.Context, ipfsCln iface.CoreAPI, desc ocispec.Descriptor) error {
+	c, err := digestconv.DigestToCid(desc.Digest)
+	if err != nil {
+		return errors.Wrapf(err, "failed to convert digest %q to cid", desc.Digest)
+	}
+
+	err = ipfsCln.Pin().Add(ctx, path.IpfsPath(c))
+	if err != nil {
+		return errors.Wrapf(err, "failed to pin %q", c)
+	}
+
 	return nil
 }
