@@ -89,8 +89,8 @@ Comparison:
 - Pull from DockerHub / Private docker registries
 - Shard content chunks evenly to 3 nodes such that each node has roughly 33% of IPFS blocks.
 
-Image | Total size (bytes) | DockerHub pull (secs) | IPFS pull (secs) | Diff (Hub/IPFS)
------ | ------------------ | --------------------- | ---------------- | ---------------
+Image | Total size (bytes) | IPFS blocks | DockerHub pull (secs) | IPFS pull (secs) | Diff (Hub/IPFS)
+----- | ------------------ | ----------- | --------------------- | ---------------- | ---------------
 docker.io/library/alpine:latest | 2759178 | 14 | 1.430587576 | 0.96249954 | 148.63%
 docker.io/library/ubuntu:latest | 28861894 | 38 | 2.079848393 | 6.93721404 | 29.98%
 docker.io/library/golang:latest | 296160075 | 380 | 4.817960124 | 55.26376992 | 8.85%
