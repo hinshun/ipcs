@@ -67,8 +67,13 @@ func run(ctx context.Context, refs ...string) error {
 
 	blockBuckets := make(map[string]uint64)
 	for _, blockParent := range blockParentByCid {
-		sort.Strings(blockParent.Refs)
-		bucket := strings.Join(blockParent.Refs, " n ")
+		var refs []string
+		for ref := range blockParent.Refs {
+			refs = append(refs, ref)
+		}
+		sort.Strings(refs)
+
+		bucket := strings.Join(refs, " n ")
 		blockBuckets[bucket] += blockParent.Size
 	}
 
@@ -112,7 +117,7 @@ func ConvertManifest(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *contai
 
 type BlockParent struct {
 	Size uint64
-	Refs []string
+	Refs map[string]struct{}
 }
 
 func CompareManifestBlocks(ctx context.Context, ipfsCln iface.CoreAPI, blockParentByCid map[string]*BlockParent, ref string, desc ocispec.Descriptor) error {
@@ -147,10 +152,11 @@ func CompareManifestBlocks(ctx context.Context, ipfsCln iface.CoreAPI, blockPare
 
 				blockParent = &BlockParent{
 					Size: size,
+					Refs: make(map[string]struct{}),
 				}
 			}
 
-			blockParent.Refs = append(blockParent.Refs, ref)
+			blockParent.Refs[ref] = struct{}{}
 			blockParentByCid[v.String()] = blockParent
 			return true
 		})

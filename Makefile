@@ -2,13 +2,10 @@ GOOS?=linux
 GOARCH?=amd64
 
 convert:
-	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/convert docker.io/library/ubuntu:latest localhost:5000/library/ubuntu:p2p
-	
-compare:
-	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/compare docker.io/library/ubuntu:latest docker.io/titusoss/ubuntu:latest
+	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/convert docker.io/library/alpine:latest localhost:5000/library/alpine:p2p
 
-registry:
-	@docker run --rm -it --name registry -p 5000:5000 registry:latest
+compare:
+	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/compare docker.io/library/ubuntu:bionic docker.io/library/ubuntu:xenial
 
 ipcs:
 	@mkdir -p ./tmp/containerd/root/plugins

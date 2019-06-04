@@ -16,12 +16,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Client is a client for containerd using ipcs.
 type Client struct {
 	ipfsCln iface.CoreAPI
 	ctrdCln *containerd.Client
 	ipcs    *store
 }
 
+// NewClient returns a new ipcs client.
 func NewClient(ipfsCln iface.CoreAPI, ctrdCln *containerd.Client) *Client {
 	return &Client{
 		ipfsCln: ipfsCln,
@@ -32,6 +34,8 @@ func NewClient(ipfsCln iface.CoreAPI, ctrdCln *containerd.Client) *Client {
 	}
 }
 
+// Pull pulls an image specified by its descriptor and creates an image named
+// ref.
 func (c *Client) Pull(ctx context.Context, ref string, desc ocispec.Descriptor) (containerd.Image, error) {
 	ctx, done, err := c.ctrdCln.WithLease(ctx)
 	if err != nil {
@@ -53,6 +57,7 @@ func (c *Client) Pull(ctx context.Context, ref string, desc ocispec.Descriptor) 
 	return i, nil
 }
 
+// Fetch fetches all the content referenced by a p2p manifest descriptor.
 func (c *Client) Fetch(ctx context.Context, ref string, desc ocispec.Descriptor) (images.Image, error) {
 	store := c.ctrdCln.ContentStore()
 	fetcher := c.ipcs
@@ -106,7 +111,11 @@ func (c *Client) Fetch(ctx context.Context, ref string, desc ocispec.Descriptor)
 	}
 }
 
+// Push is unimplemented. If reference resolution is centralized in a
+// metadata-only registry, push may just update the tag to new p2p manifest
+// digest.
 func (c *Client) Push(ctx context.Context, ref string, desc ocispec.Descriptor) error {
+	panic("unimplemented")
 	return nil
 }
 
