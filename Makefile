@@ -5,7 +5,7 @@ convert:
 	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/convert docker.io/library/alpine:latest localhost:5000/library/alpine:p2p
 
 compare:
-	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/compare docker.io/library/ubuntu:bionic docker.io/library/ubuntu:xenial
+	@GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/compare docker.io/library/ubuntu:xenial docker.io/titusoss/ubuntu:latest
 
 ipcs:
 	@mkdir -p ./tmp/containerd/root/plugins

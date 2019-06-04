@@ -19,6 +19,12 @@ $ make containerd
 
 # Term 3: Convert alpine to a p2p manifest
 $ make convert
+2019/06/04 13:54:40 Resolved "docker.io/library/alpine:latest" as "docker.io/library/alpine:latest@sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6"
+2019/06/04 13:54:40 Original Manifest [456] sha256:769fddc7cc2f0a1c35abb2f91432e8beecf83916c421420e6a6da9f8975464b6:
+// ...
+2019/06/04 13:54:41 Converted Manifest [456] sha256:9181f3c247af3cea545adb1b769639ddb391595cce22089824702fa22a7e8cbb:
+// ...
+2019/06/04 13:54:41 Successfully pulled image "localhost:5000/library/alpine:p2p"
 ```
 
 Converting two manifests from DockerHub to p2p manifests, and then comparing the number of shared IPLD nodes (layers chunked into 262KiB blocks):
@@ -32,6 +38,14 @@ $ make containerd
 
 # Term 3: Convert ubuntu:bionic and ubuntu:xenial into p2p manifests, then bucket IPLD nodes into nodes unique to each image, and nodes inside intersect.
 $ make compare
+// ...
+2019/06/04 13:51:33 Comparing manifest blocks for "docker.io/library/ubuntu:xenial" ("sha256:8d382cbbe5aea68d0ed47e18a81d9711ab884bcb6e54de680dc82aaa1b6577b8")
+2019/06/04 13:51:34 Comparing manifest blocks for "docker.io/titusoss/ubuntu:latest" ("sha256:cfdf8c2f3d5a16dc4c4bbac4c01ee5050298db30cea31088f052798d02114958")
+2019/06/04 13:51:34 Found 322 blocks
+docker.io/library/ubuntu:xenial: 4503
+docker.io/library/ubuntu:xenial n docker.io/titusoss/ubuntu:latest: 87550251
+docker.io/titusoss/ubuntu:latest: 76117824
+// 87550251 shared bytes in IPLD nodes
 ```
 
 ## Design
