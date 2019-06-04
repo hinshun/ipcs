@@ -53,11 +53,11 @@ The previous IPFS implementations all utilize the [Docker Registry HTTP API V2](
 
 IPFS imposes a 4 MiB limit for blocks because it may be run in a public network with adversarial peers. Since its not able to verify hashes until all the content has arrived, an attacker can send gibberish flooding connections and consuming bandwidth. Chunking data into smaller blocks also aids in deduplication:
 
-![Chunking blocks in IPFS]()
+![Chunking blocks in IPFS](chunking.png)
 
 IPCS implements containerd's `content.Store` interface and can be built as a golang plugin to override containerd's default local store. A converter implementation is also provided that converts a regular OCI image manifest to a manifest where every descriptor is replaced with the descriptor of the root DAG node added to IPFS. The root node is the merkle root of the 262KiB chunks of the layer.
 
-![Converting to P2P]()
+![Converting to P2P](containerd-ipfs.png)
 
 Although the IPFS daemon or its network may already have the bytes for all image's P2P content, containerd has a [boltdb](https://github.com/boltdb/bolt) metadata store wrapping the underlying `content.Store`.
 
