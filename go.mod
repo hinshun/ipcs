@@ -52,4 +52,4 @@ require (
 	gotest.tools v2.2.0+incompatible // indirect
 )
 
-replace github.com/containerd/containerd => github.com/hinshun/containerd v0.2.1-0.20190601213938-89d008e21afc
+replace github.com/containerd/containerd => github.com/hinshun/containerd v0.2.1-0.20190602215134-c3f4eaaf1470
