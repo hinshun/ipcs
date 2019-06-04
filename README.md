@@ -149,7 +149,13 @@ Explore deduplication by adding each layer's uncompressed, untared files into IP
 
 Explore IPFS-FUSE mounted layers for lazy container rootfs:
 - Same requirements as above.
-- Possible snapshotter interface changes
+- Possible snapshotter interface changes:
   - [ ] https://github.com/containerd/containerd/issues/2968
   - [ ] https://github.com/containerd/containerd/issues/2943
   - https://docs.google.com/document/d/1TmNWnmbx-fd2wUhujuUtAeSUuulWZyhggAKCSc1F3AE/edit
+
+Explore IPFS tuning to improve performance
+- Tune goroutine/parallelism in various IPFS components.
+- Tune datastore (use experimental [go-ds-badger](https://github.com/ipfs/go-ds-badger)?)
+  - `badgerds` is hard to shard for benchmarking purposes, because GC doesn't remove data on disk: https://github.com/ipfs/go-ds-badger/issues/54
+- Profile / trace performance issues and identify hotspots.
