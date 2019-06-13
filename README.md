@@ -87,7 +87,7 @@ So in the case of this project `ipcs`, a pull is simply flushing through its `co
 
 ## Results
 
-Collected data on: `6/4/2019`
+Collected data on: `6/13/2019`
 
 Systems:
 - m5.large x 3
@@ -105,12 +105,16 @@ Comparison:
 
 Image | Total size (bytes) | IPFS blocks | DockerHub pull (secs) | IPFS pull (secs) | Diff (Hub/IPFS)
 ----- | ------------------ | ----------- | --------------------- | ---------------- | ---------------
-docker.io/library/alpine:latest | 2759178 | 14 | 1.430587576 | 0.96249954 | 148.63%
-docker.io/library/ubuntu:latest | 28861894 | 38 | 2.079848393 | 6.93721404 | 29.98%
-docker.io/library/golang:latest | 296160075 | 380 | 4.817960124 | 55.26376992 | 8.85%
-docker.io/ipfs/go-ipfs:latest | 23545678 | 103 | 1.182348947 | 8.134937865 | 14.53%
+docker.io/library/alpine:latest | 2759178 | 14 | 1.430587576 | 0.700885049 | 204.11%
+docker.io/library/ubuntu:latest | 28861894 | 38 | 2.079848393 | 1.86365884 | 111.60%
+docker.io/library/golang:latest | 296160075 | 380 | 4.817960124 | 11.8802867 | 40.55%
+docker.io/ipfs/go-ipfs:latest | 23545678 | 103 | 1.182348947 | 8.134937865 | 33.47%
 
-IPFS's performance seems to slow down drastically as the number of nodes (size of total image) goes up. As seen from `make compare`, there also doesn't seem to be any improvements in deduplication between IPFS chunks as opposed to OCI layers:
+IPFS's performance seems to slow down as the number of nodes (size of total image) goes up. There was a recent regression in `go-ipfs` v0.4.21 that was fixed in this commit on `master`:
+- https://github.com/ipfs/go-ipfs/commit/aee8041f03285811455bc392ca04a2ba0ecb28f0
+- https://github.com/ipfs/go-peertaskqueue/pull/7
+
+As seen from `make compare`, there also doesn't seem to be any improvements in deduplication between IPFS chunks as opposed to OCI layers:
 
 ```sh
 $ GO111MODULE=on IPFS_PATH=./tmp/ipfs go run ./cmd/compare docker.io/library/alpine:latest docker.io/library/ubuntu:latest docker.io/library/golang:latest docker.io/ipfs/go-ipfs:latest
