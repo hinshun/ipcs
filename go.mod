@@ -3,6 +3,7 @@ module github.com/hinshun/ipcs
 go 1.12
 
 require (
+	github.com/AkihiroSuda/filegrain v0.0.0-20190607033141-66f306520d62
 	github.com/Microsoft/go-winio v0.4.12 // indirect
 	github.com/Microsoft/hcsshim v0.8.6 // indirect
 	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
@@ -11,7 +12,7 @@ require (
 	github.com/containerd/cgroups v0.0.0-20190226200435-dbea6f2bd416 // indirect
 	github.com/containerd/console v0.0.0-20181022165439-0650fd9eeb50 // indirect
 	github.com/containerd/containerd v1.2.6
-	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
+	github.com/containerd/continuity v0.0.0-20190426062206-aaeac12a7ffc
 	github.com/containerd/fifo v0.0.0-20190226154929-a9fb20d87448 // indirect
 	github.com/containerd/go-runc v0.0.0-20190226155025-7d11b49dc076 // indirect
 	github.com/containerd/ttrpc v0.0.0-20190211042230-69144327078c // indirect

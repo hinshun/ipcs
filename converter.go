@@ -9,11 +9,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/AkihiroSuda/filegrain/continuityutil"
 	"github.com/containerd/containerd/archive"
 	"github.com/containerd/containerd/archive/compression"
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/platforms"
+	"github.com/containerd/continuity"
 	"github.com/hinshun/ipcs/digestconv"
 	files "github.com/ipfs/go-ipfs-files"
 	iface "github.com/ipfs/interface-go-ipfs-core"
@@ -116,6 +118,7 @@ func addFile(ctx context.Context, api iface.CoreAPI, n files.Node) (digest.Diges
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to convert cid %q to digest", p.Cid())
 	}
+	log.Printf("Added as %q [%s]", p.Cid(), dgst)
 
 	return dgst, nil
 }
@@ -219,4 +222,99 @@ func RegularTypeFilter(header *tar.Header) (bool, error) {
 	default:
 		return false, nil
 	}
+}
+
+type continuityConverter struct {
+	api      iface.CoreAPI
+	provider content.Provider
+}
+
+func NewContinuityConverter(api iface.CoreAPI, provider content.Provider) Converter {
+	return &continuityConverter{
+		api:      api,
+		provider: provider,
+	}
+}
+
+func (c *continuityConverter) Convert(ctx context.Context, desc ocispec.Descriptor) (ocispec.Descriptor, error) {
+	mfst, err := images.Manifest(ctx, c.provider, desc, platforms.Default())
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to get manifest")
+	}
+
+	rootfs, err := ioutil.TempDir("", "ipcs-rootfs")
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to create tmp root directory")
+	}
+
+	for _, layer := range mfst.Layers {
+		ra, err := c.provider.ReaderAt(ctx, layer)
+		if err != nil {
+			return ocispec.Descriptor{}, err
+		}
+
+		cr := content.NewReader(ra)
+		r, err := compression.DecompressStream(cr)
+		if err != nil {
+			return ocispec.Descriptor{}, err
+		}
+
+		_, err = archive.Apply(ctx, rootfs, r, archive.WithFilter(func(hdr *tar.Header) (bool, error) {
+			return true, nil
+		}))
+		if err != nil {
+			r.Close()
+			return ocispec.Descriptor{}, err
+		}
+		r.Close()
+	}
+
+	pctx, err := continuity.NewContext(rootfs)
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to create continuity context")
+	}
+
+	m, err := continuity.BuildManifest(pctx)
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to build continuity manifest")
+	}
+
+	p, err := continuity.Marshal(m)
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to marshal continuity manifest")
+	}
+
+	continuityDigest, err := addFile(ctx, c.api, files.NewBytesFile(p))
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to upload manifest")
+	}
+	mfst.Layers = []ocispec.Descriptor{
+		{
+			MediaType: continuityutil.MediaTypeManifestV0Protobuf,
+			Digest:    continuityDigest,
+			Size:      int64(len(p)),
+		},
+	}
+
+	mfst.Config.Digest, err = copyFile(ctx, c.api, c.provider, mfst.Config)
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrapf(err, "failed to upload manifest config blob %q", mfst.Config.Digest)
+	}
+
+	mfstJSON, err := json.MarshalIndent(mfst, "", "   ")
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to marshal manifest JSON")
+	}
+
+	mfstDigest, err := addFile(ctx, c.api, files.NewBytesFile(mfstJSON))
+	if err != nil {
+		return ocispec.Descriptor{}, errors.Wrap(err, "failed to upload manifest")
+	}
+	log.Printf("Converted Manifest [%d] %s:\n%s", len(mfstJSON), mfstDigest, mfstJSON)
+
+	return ocispec.Descriptor{
+		MediaType: ocispec.MediaTypeImageManifest,
+		Digest:    mfstDigest,
+		Size:      int64(len(mfstJSON)),
+	}, nil
 }
