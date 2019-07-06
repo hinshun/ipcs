@@ -87,7 +87,7 @@ So in the case of this project `ipcs`, a pull is simply flushing through its `co
 
 ## Results
 
-Collected data on: `6/13/2019`
+Collected data on: `7/06/2019`
 
 Systems:
 - m5.large x 3
@@ -99,6 +99,11 @@ Systems:
 - Containerd v1.2.6
 - IPFS v0.4.21
 
+Configuration:
+- Switch libp2p mux from `yamux` to `mplex`: `export LIBP2P_MUX_PREFS="/mplex/6.7.0"`
+- Set flatfs `sync` to `false`
+- Enable experimental `StrategicProviding`
+
 Comparison:
 - Pull from DockerHub / Private docker registries
 - Shard content chunks evenly to 3 nodes such that each node has roughly 33% of IPFS blocks.
@@ -106,9 +111,9 @@ Comparison:
 Image | Total size (bytes) | IPFS blocks | DockerHub pull (secs) | IPFS pull (secs) | Diff (Hub/IPFS)
 ----- | ------------------ | ----------- | --------------------- | ---------------- | ---------------
 docker.io/library/alpine:latest | 2759178 | 14 | 1.430587576 | 0.700885049 | 204.11%
-docker.io/library/ubuntu:latest | 28861894 | 38 | 2.079848393 | 1.86365884 | 111.60%
-docker.io/library/golang:latest | 296160075 | 380 | 4.817960124 | 11.8802867 | 40.55%
-docker.io/ipfs/go-ipfs:latest | 23545678 | 103 | 1.182348947 | 8.134937865 | 33.47%
+docker.io/library/ubuntu:latest | 28861894 | 38 | 2.079848393 | 1.135062637 | 183.24%
+docker.io/library/golang:latest | 296160075 | 380 | 4.817960124 | 6.401633512 | 75.26%
+docker.io/ipfs/go-ipfs:latest | 23545678 | 103 | 1.182348947 | 2.041237958 | 57.92%
 
 IPFS's performance seems to slow down as the number of nodes (size of total image) goes up. There was a recent regression in `go-ipfs` v0.4.21 that was fixed in this commit on `master`:
 - https://github.com/ipfs/go-ipfs/commit/aee8041f03285811455bc392ca04a2ba0ecb28f0
