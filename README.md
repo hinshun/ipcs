@@ -87,7 +87,7 @@ So in the case of this project `ipcs`, a pull is simply flushing through its `co
 
 ## Results
 
-Collected data on: `7/06/2019`
+Collected data on: `7/11/2019`
 
 Systems:
 - m5.large x 3
@@ -110,10 +110,10 @@ Comparison:
 
 Image | Total size (bytes) | IPFS blocks | DockerHub pull (secs) | IPFS pull (secs) | Diff (Hub/IPFS)
 ----- | ------------------ | ----------- | --------------------- | ---------------- | ---------------
-docker.io/library/alpine:latest | 2759178 | 14 | 1.430587576 | 0.700885049 | 204.11%
-docker.io/library/ubuntu:latest | 28861894 | 38 | 2.079848393 | 1.135062637 | 183.24%
-docker.io/library/golang:latest | 296160075 | 380 | 4.817960124 | 6.401633512 | 75.26%
-docker.io/ipfs/go-ipfs:latest | 23545678 | 103 | 1.182348947 | 2.041237958 | 57.92%
+docker.io/library/alpine:latest | 2759178 | 14 | 1.744165732 | 0.7662775298 | 227.62%
+docker.io/ipfs/go-ipfs:latest | 23545678 | 103 | 1.791054265 | 1.633165299 | 109.67%
+docker.io/library/ubuntu:latest | 28861894 | 38 | 2.720580011 | 1.629809674 | 116.93%
+docker.io/library/golang:latest | 296160075 | 380 | 4.687380759 | 6.015498289 | 77.92%
 
 IPFS's performance seems to slow down as the number of nodes (size of total image) goes up. There was a recent regression in `go-ipfs` v0.4.21 that was fixed in this commit on `master`:
 - https://github.com/ipfs/go-ipfs/commit/aee8041f03285811455bc392ca04a2ba0ecb28f0
