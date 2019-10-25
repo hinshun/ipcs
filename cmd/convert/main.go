@@ -70,7 +70,7 @@ func Convert(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *containerd.Cli
 		return errors.Wrapf(err, "failed to create fetcher for %q", src)
 	}
 
-	converter := ipcs.NewConverter(ipfsCln, contentutil.FromFetcher(fetcher))
+	converter := ipcs.NewContinuityConverter(ipfsCln, contentutil.FromFetcher(fetcher))
 	mfstDesc, err := converter.Convert(ctx, srcDesc)
 	if err != nil {
 		return errors.Wrapf(err, "failed to convert %q to ipfs manifest", srcName)
