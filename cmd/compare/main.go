@@ -15,12 +15,11 @@ import (
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/hinshun/ipcs"
-	"github.com/hinshun/ipcs/digestconv"
+	"github.com/hinshun/ipcs/pkg/digestconv"
 	cid "github.com/ipfs/go-cid"
 	httpapi "github.com/ipfs/go-ipfs-http-client"
 	merkledag "github.com/ipfs/go-merkledag"
 	iface "github.com/ipfs/interface-go-ipfs-core"
-	"github.com/moby/buildkit/util/contentutil"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
@@ -106,7 +105,7 @@ func ConvertManifest(ctx context.Context, ipfsCln iface.CoreAPI, ctrdCln *contai
 		return ocispec.Descriptor{}, errors.Wrapf(err, "failed to create fetcher for %q", srcName)
 	}
 
-	converter := ipcs.NewConverter(ipfsCln, contentutil.FromFetcher(fetcher))
+	converter := ipcs.NewConverter(ipfsCln, ipcs.FromFetcher(fetcher))
 	dstDesc, err := converter.Convert(ctx, srcDesc)
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrapf(err, "failed to convert %q to ipfs manifest", srcName)
@@ -121,7 +120,7 @@ type BlockParent struct {
 }
 
 func CompareManifestBlocks(ctx context.Context, ipfsCln iface.CoreAPI, blockParentByCid map[string]*BlockParent, ref string, desc ocispec.Descriptor) error {
-	store := ipcs.NewContentStoreFromCoreAPI(ipfsCln)
+	store := ipcs.New(ctx, "./tmp/ipcs", 0)
 	mfst, err := images.Manifest(ctx, store, desc, platforms.Default())
 	if err != nil {
 		return errors.Wrap(err, "failed to get manifest")

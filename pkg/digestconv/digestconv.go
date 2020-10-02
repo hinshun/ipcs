@@ -10,6 +10,11 @@ import (
 )
 
 func DigestToCid(dgst digest.Digest) (cid.Cid, error) {
+	// in exceptionally rare cases we may have an empty digest
+	// this check here prevents a panic from happening in those cases
+	if dgst.String() == "" {
+		return cid.Cid{}, errors.New("bad digest")
+	}
 	data, err := hex.DecodeString(dgst.Hex())
 	if err != nil {
 		return cid.Cid{}, errors.Wrap(err, "failed to decode digest hex")
@@ -20,7 +25,7 @@ func DigestToCid(dgst digest.Digest) (cid.Cid, error) {
 		return cid.Cid{}, errors.Wrap(err, "failed to encode digest as SHA256 multihash")
 	}
 
-	return cid.NewCidV0(multihash.Multihash(encoded)), nil
+	return cid.NewCidV1(cid.DagProtobuf, multihash.Multihash(encoded)), nil
 }
 
 func CidToDigest(c cid.Cid) (digest.Digest, error) {

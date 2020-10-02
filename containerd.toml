@@ -1,0 +1,14 @@
+version = 2
+root = "./tmp/containerd/root"
+state = "./tmp/containerd/state"
+disabled_plugins = ["io.containerd.content.v1.content"]
+
+[grpc]
+  address = "./tmp/containerd/containerd.sock"
+  uid = 0
+  gid = 0
+
+[proxy_plugins]
+  [proxy_plugins.ipcs]
+    type = "content"
+    address = "./tmp/ipcsd/ipcsd.sock"

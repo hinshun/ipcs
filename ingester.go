@@ -2,21 +2,19 @@ package ipcs
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/errdefs"
-	"github.com/hinshun/ipcs/digestconv"
-	files "github.com/ipfs/go-ipfs-files"
-	iface "github.com/ipfs/interface-go-ipfs-core"
-	"github.com/ipfs/interface-go-ipfs-core/options"
-	"github.com/ipfs/interface-go-ipfs-core/path"
+	"github.com/hinshun/ipcs/pkg/digestconv"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
-func (s *store) Writer(ctx context.Context, opts ...content.WriterOpt) (content.Writer, error) {
+func (p *Peer) Writer(ctx context.Context, opts ...content.WriterOpt) (content.Writer, error) {
 	var wOpts content.WriterOpts
 	for _, opt := range opts {
 		if err := opt(&wOpts); err != nil {
@@ -27,41 +25,47 @@ func (s *store) Writer(ctx context.Context, opts ...content.WriterOpt) (content.
 	if wOpts.Desc.Digest != "" {
 		c, err := digestconv.DigestToCid(wOpts.Desc.Digest)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to convert digest '%s' to cid", wOpts.Desc.Digest)
+			return nil, err
 		}
 
-		_, err = s.cln.Unixfs().Get(ctx, path.IpfsPath(c))
-		if err == nil {
-			return nil, errors.Wrapf(errdefs.ErrAlreadyExists, "content %v", wOpts.Desc.Digest)
+		exists, err := p.bstore.Has(c)
+		if err != nil {
+			return nil, err
+		}
+
+		if exists {
+			return nil, errors.Wrapf(errdefs.ErrAlreadyExists, "content foobar %v", wOpts.Desc.Digest)
 		}
 	}
 
+	eg, ctx := errgroup.WithContext(ctx)
 	w := &writer{
 		ctx:   ctx,
-		cln:   s.cln,
+		eg:    eg,
+		peer:  p,
 		ref:   wOpts.Ref,
 		total: wOpts.Desc.Size,
 	}
 
-	err := w.Truncate(0)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to truncate writer")
-	}
+	return w, w.Truncate(0)
+}
 
-	return w, nil
+type writerDigest struct {
+	dgst digest.Digest
 }
 
 type writer struct {
 	ctx       context.Context
-	cln       iface.CoreAPI
+	eg        *errgroup.Group
+	peer      *Peer
+	err       error
 	ref       string
 	offset    int64
 	total     int64
 	dgst      digest.Digest
 	startedAt time.Time
 	updatedAt time.Time
-	pw        io.Writer
-	ipfsErr   error
+	pw        io.WriteCloser
 	cancel    func() error
 }
 
@@ -73,8 +77,8 @@ type writer struct {
 //
 // Implementations must not retain p.
 func (w *writer) Write(p []byte) (n int, err error) {
-	if w.ipfsErr != nil {
-		return 0, w.ipfsErr
+	if w.err != nil {
+		return 0, w.err
 	}
 
 	n, err = w.pw.Write(p)
@@ -87,7 +91,10 @@ func (w *writer) Write(p []byte) (n int, err error) {
 // committed this allows resuming or aborting.
 // Calling Close on a closed writer will not error.
 func (w *writer) Close() error {
-	return w.cancel()
+	if w.cancel != nil {
+		return w.cancel()
+	}
+	return nil
 }
 
 // Digest may return empty digest or panics until committed.
@@ -100,6 +107,11 @@ func (w *writer) Digest() digest.Digest {
 // Commit always closes the writer, even on error.
 // ErrAlreadyExists aborts the writer.
 func (w *writer) Commit(ctx context.Context, size int64, expected digest.Digest, opts ...content.Opt) error {
+	err := w.Close()
+	if err != nil {
+		return err
+	}
+
 	if size > 0 && size != w.offset {
 		return errors.Wrapf(errdefs.ErrFailedPrecondition, "unexpected commit size %d, expected %d", w.offset, size)
 	}
@@ -108,7 +120,7 @@ func (w *writer) Commit(ctx context.Context, size int64, expected digest.Digest,
 		return errors.Wrapf(errdefs.ErrFailedPrecondition, "unexpected commit digest %s, expected %s", w.dgst, expected)
 	}
 
-	return w.Close()
+	return nil
 }
 
 // Status returns the current state of write
@@ -139,29 +151,31 @@ func (w *writer) Truncate(size int64) error {
 	r, w.pw = io.Pipe()
 
 	ctx, cancel := context.WithCancel(w.ctx)
-	go func() {
-		p, err := w.cln.Unixfs().Add(ctx, files.NewReaderFile(r), options.Unixfs.Pin(true))
-		if err != nil {
-			w.ipfsErr = err
-			return
-		}
-
-		dgst, err := digestconv.CidToDigest(p.Cid())
-		if err != nil {
-			w.ipfsErr = err
-			return
-		}
-
-		w.dgst = dgst
-	}()
-
-	w.cancel = func() error {
-		cancel()
-		w.ipfsErr = nil
-
-		err := w.Close()
+	w.eg.Go(func() error {
+		nd, err := w.peer.Add(ctx, r)
 		if err != nil {
 			return err
+		}
+
+		w.dgst, err = digestconv.CidToDigest(nd.Cid())
+		fmt.Println("Added file to peer", w.dgst, "=>", nd.Cid())
+		return err
+	})
+
+	w.cancel = func() error {
+		defer func() {
+			w.cancel = nil
+			cancel()
+		}()
+
+		err := w.pw.Close()
+		if err != nil {
+			return err
+		}
+
+		w.err = w.eg.Wait()
+		if w.err != nil {
+			return w.err
 		}
 
 		return r.Close()

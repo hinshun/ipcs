@@ -3,53 +3,62 @@ module github.com/hinshun/ipcs
 go 1.12
 
 require (
-	github.com/Microsoft/go-winio v0.4.12 // indirect
-	github.com/Microsoft/hcsshim v0.8.6 // indirect
-	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
-	github.com/btcsuite/btcd v0.0.0-20190315201642-aa6e0f35703c // indirect
-	github.com/containerd/aufs v0.0.0-20190114185352-f894a800659b
-	github.com/containerd/cgroups v0.0.0-20190226200435-dbea6f2bd416 // indirect
-	github.com/containerd/console v0.0.0-20181022165439-0650fd9eeb50 // indirect
-	github.com/containerd/containerd v1.2.6
-	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
-	github.com/containerd/fifo v0.0.0-20190226154929-a9fb20d87448 // indirect
-	github.com/containerd/go-runc v0.0.0-20190226155025-7d11b49dc076 // indirect
-	github.com/containerd/ttrpc v0.0.0-20190211042230-69144327078c // indirect
-	github.com/containerd/typeurl v0.0.0-20190228175220-2a93cfde8c20 // indirect
-	github.com/containerd/zfs v0.0.0-20181107152433-31af176f2ae8
-	github.com/coreos/go-systemd v0.0.0-20161114122254-48702e0da86b // indirect
-	github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible // indirect
-	github.com/docker/docker v1.13.1 // indirect
-	github.com/docker/go-events v0.0.0-20170721190031-9461782956ad // indirect
-	github.com/docker/go-metrics v0.0.0-20181218153428-b84716841b82 // indirect
-	github.com/docker/go-units v0.3.3 // indirect
-	github.com/godbus/dbus v4.1.0+incompatible // indirect
-	github.com/gogo/googleapis v1.1.0 // indirect
-	github.com/google/go-cmp v0.2.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
-	github.com/ipfs/go-cid v0.0.2
-	github.com/ipfs/go-ipfs-files v0.0.3
-	github.com/ipfs/go-ipfs-http-client v0.0.2
-	github.com/ipfs/go-ipfs-util v0.0.1
-	github.com/ipfs/go-merkledag v0.0.3
-	github.com/ipfs/interface-go-ipfs-core v0.0.8
-	github.com/mistifyio/go-zfs v2.1.1+incompatible // indirect
-	github.com/moby/buildkit v0.3.3
-	github.com/multiformats/go-multiaddr v0.0.4 // indirect
-	github.com/multiformats/go-multihash v0.0.5
-	github.com/opencontainers/go-digest v1.0.0-rc1
+	github.com/Microsoft/hcsshim v0.8.10 // indirect
+	github.com/Microsoft/hcsshim/test v0.0.0-20200923174857-380508768ed2 // indirect
+	github.com/Netflix/p2plab v0.0.0-20200602171820-300ac43d3984 // indirect
+	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
+	github.com/containerd/console v1.0.1 // indirect
+	github.com/containerd/containerd v1.4.1
+	github.com/containerd/continuity v0.0.0-20200928162600-f2cc35102c2a // indirect
+	github.com/containerd/fifo v0.0.0-20200410184934-f15a3290365b // indirect
+	github.com/containerd/go-runc v0.0.0-20200930051345-7c5957f67ef4 // indirect
+	github.com/containerd/ttrpc v1.0.2 // indirect
+	github.com/containerd/typeurl v1.0.1 // indirect
+	github.com/coreos/go-systemd/v22 v22.1.0 // indirect
+	github.com/gogo/googleapis v1.4.0 // indirect
+	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/ipfs/go-bitswap v0.2.20
+	github.com/ipfs/go-blockservice v0.1.3
+	github.com/ipfs/go-cid v0.0.7
+	github.com/ipfs/go-datastore v0.4.5
+	github.com/ipfs/go-ds-badger v0.2.5
+	github.com/ipfs/go-ipfs-blockstore v0.1.4
+	github.com/ipfs/go-ipfs-chunker v0.0.5
+	github.com/ipfs/go-ipfs-config v0.5.3
+	github.com/ipfs/go-ipfs-files v0.0.8
+	github.com/ipfs/go-ipfs-http-client v0.1.0
+	github.com/ipfs/go-ipfs-provider v0.4.3
+	github.com/ipfs/go-ipld-cbor v0.0.4
+	github.com/ipfs/go-ipld-format v0.2.0
+	github.com/ipfs/go-ipns v0.0.2
+	github.com/ipfs/go-merkledag v0.3.2
+	github.com/ipfs/go-unixfs v0.2.4
+	github.com/ipfs/interface-go-ipfs-core v0.4.0
+	github.com/libp2p/go-libp2p v0.11.0
+	github.com/libp2p/go-libp2p-core v0.6.1
+	github.com/libp2p/go-libp2p-kad-dht v0.9.0
+	github.com/libp2p/go-libp2p-noise v0.1.1
+	github.com/libp2p/go-libp2p-peerstore v0.2.6
+	github.com/libp2p/go-libp2p-quic-transport v0.8.0
+	github.com/libp2p/go-libp2p-record v0.1.3
+	github.com/libp2p/go-libp2p-tls v0.1.3
+	github.com/libp2p/go-libp2p-yamux v0.2.8
+	github.com/multiformats/go-multihash v0.0.14
+	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.1
-	github.com/opencontainers/runc v0.1.1 // indirect
-	github.com/opencontainers/runtime-spec v0.1.2-0.20190207185410-29686dbc5559
-	github.com/pkg/errors v0.8.1
-	github.com/prometheus/client_golang v0.9.3 // indirect
-	github.com/sirupsen/logrus v1.4.0 // indirect
-	github.com/stretchr/testify v1.3.0
-	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2 // indirect
-	go.etcd.io/bbolt v1.3.2 // indirect
-	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
-	google.golang.org/grpc v1.19.0 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
+	github.com/opencontainers/runc v1.0.0-rc9 // indirect
+	github.com/opencontainers/runtime-spec v1.0.2
+	github.com/opencontainers/selinux v1.6.0 // indirect
+	github.com/pkg/errors v0.9.1
+	github.com/prometheus/procfs v0.1.3 // indirect
+	github.com/rs/zerolog v1.20.0 // indirect
+	github.com/sirupsen/logrus v1.7.0 // indirect
+	github.com/smartystreets/goconvey v0.0.0-20190710185942-9d28bd7c0945 // indirect
+	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
+	go.etcd.io/bbolt v1.3.5 // indirect
+	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
+	golang.org/x/tools v0.0.0-20200113154838-30cae5f2fb06 // indirect
+	google.golang.org/grpc v1.32.0
+	gotest.tools/v3 v3.0.2 // indirect
 )
-
-replace github.com/containerd/containerd => github.com/hinshun/containerd v0.2.1-0.20190602215134-c3f4eaaf1470

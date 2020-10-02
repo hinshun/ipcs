@@ -7,21 +7,18 @@ import (
 )
 
 // Status returns the status of the provided ref.
-func (s *store) Status(ctx context.Context, ref string) (content.Status, error) {
-	panic("unimplemented")
+func (p *Peer) Status(ctx context.Context, ref string) (content.Status, error) {
 	return content.Status{}, nil
 }
 
 // ListStatuses returns the status of any active ingestions whose ref match the
 // provided regular expression. If empty, all active ingestions will be
 // returned.
-func (s *store) ListStatuses(ctx context.Context, filters ...string) ([]content.Status, error) {
-	panic("unimplemented")
+func (p *Peer) ListStatuses(ctx context.Context, filters ...string) ([]content.Status, error) {
 	return nil, nil
 }
 
 // Abort completely cancels the ingest operation targeted by ref.
-func (s *store) Abort(ctx context.Context, ref string) error {
-	panic("unimplemented")
+func (p *Peer) Abort(ctx context.Context, ref string) error {
 	return nil
 }

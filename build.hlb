@@ -1,0 +1,50 @@
+fs default() {
+	ipcsd
+	copy containerd "/bin" "/" with contentsOnly
+	copy rootlesskit "/" "/"
+	download "bin/"
+}
+
+fs localGo() {
+	local "." with option {
+		includePatterns "go.mod" "go.sum" "**/*.go"
+	}
+}
+
+fs _ipcsd() {
+	image "golang"
+	run "go build -o /out/ipcsd ./cmd/ipcsd/main.go" with option {
+		dir "/in"
+		mount localGo "/in" as modSrc
+		mount scratch "/out" as ipcsd
+	}
+}
+
+fs tarball(string url) {
+	http url with filename("release.tar.gz")
+}
+
+fs _untar(fs tarball) {
+	image "alpine"
+	run "tar -xzvf /in/release.tar.gz -C /out" with option {
+		mount tarball "/in"
+		mount scratch "/out" as untar
+	}
+}
+
+fs containerd() {
+	untar tarball("https://github.com/containerd/containerd/releases/download/v1.4.1/containerd-1.4.1-linux-amd64.tar.gz")
+}
+
+fs rootlesskit() {
+	untar tarball("https://github.com/rootless-containers/rootlesskit/releases/download/v0.10.1/rootlesskit-x86_64.tar.gz")
+}
+
+fs debug() {
+	image "alpine"
+	run "apk add -U tree"
+	run "tree /in" with option {
+		ignoreCache
+		mount rootlesskit "/in"
+	}
+}

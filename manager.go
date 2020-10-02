@@ -2,13 +2,12 @@ package ipcs
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/errdefs"
-	"github.com/hinshun/ipcs/digestconv"
-	"github.com/ipfs/interface-go-ipfs-core/options"
-	"github.com/ipfs/interface-go-ipfs-core/path"
+	"github.com/hinshun/ipcs/pkg/digestconv"
 	digest "github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 )
@@ -16,26 +15,31 @@ import (
 // Info will return metadata about content available in the content store.
 //
 // If the content is not present, ErrNotFound will be returned.
-func (s *store) Info(ctx context.Context, dgst digest.Digest) (content.Info, error) {
+func (p *Peer) Info(ctx context.Context, dgst digest.Digest) (content.Info, error) {
+	fmt.Println("Info", dgst)
+
 	c, err := digestconv.DigestToCid(dgst)
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to convert digest %q to cid", dgst)
 	}
 
-	n, err := s.cln.Unixfs().Get(ctx, path.IpfsPath(c))
+	fmt.Println("Getting node", c)
+	nd, err := p.dserv.Get(ctx, c)
 	if err != nil {
-		return content.Info{}, errors.Wrapf(err, "failed to get unixfs node %q", c)
+		return content.Info{}, errors.Wrapf(err, "failed to get ipld node %q", c)
 	}
 
-	size, err := n.Size()
+	fmt.Println("Getting size", c)
+	size, err := nd.Size()
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to get size of %q", c)
 	}
 
+	fmt.Println("Returning info")
 	now := time.Now()
 	return content.Info{
 		Digest:    dgst,
-		Size:      size,
+		Size:      int64(size),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}, nil
@@ -46,58 +50,58 @@ func (s *store) Info(ctx context.Context, dgst digest.Digest) (content.Info, err
 // fields will be updated.
 // Mutable fields:
 //  labels.*
-func (s *store) Update(ctx context.Context, info content.Info, fieldpaths ...string) (content.Info, error) {
+func (p *Peer) Update(ctx context.Context, info content.Info, fieldpaths ...string) (content.Info, error) {
 	return content.Info{}, errors.Wrapf(errdefs.ErrFailedPrecondition, "update not supported on immutable content store")
 }
 
 // Walk will call fn for each item in the content store which
 // match the provided filters. If no filters are given all
 // items will be walked.
-func (s *store) Walk(ctx context.Context, fn content.WalkFunc, filters ...string) error {
+func (p *Peer) Walk(ctx context.Context, fn content.WalkFunc, filters ...string) error {
+	return nil
+
+	cids, err := p.bstore.AllKeysChan(ctx)
+	if err != nil {
+		return err
+	}
+
 	// TODO: Filters are also not supported in containerd's local store.
 	// Since we replace the local store, and filters are implemented in the boltdb
 	// metadata that wraps the local store, we can wait until upstream supports
 	// it too.
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case c, ok := <-cids:
+			if !ok {
+				return nil
+			}
 
-	pins, err := s.cln.Pin().Ls(ctx, options.Pin.Type.All())
-	if err != nil {
-		return errors.Wrap(err, "failed to list ipfs pins")
+			dgst, err := digestconv.CidToDigest(c)
+			if err != nil {
+				return err
+			}
+
+			info, err := p.Info(ctx, dgst)
+			if err != nil {
+				return err
+			}
+
+			err = fn(info)
+			if err != nil {
+				return err
+			}
+		}
 	}
-
-	for _, pin := range pins {
-		c := pin.Path().Cid()
-		dgst, err := digestconv.CidToDigest(c)
-		if err != nil {
-			return errors.Wrap(err, "failed to convert digest")
-		}
-
-		info, err := s.Info(ctx, dgst)
-		if err != nil {
-			return errors.Wrap(err, "failed to get info")
-		}
-
-		err = fn(info)
-		if err != nil {
-			return errors.Wrap(err, "failed to walk info")
-		}
-	}
-
-	return nil
 }
 
 // Delete removes the content from the store.
-func (s *store) Delete(ctx context.Context, dgst digest.Digest) error {
+func (p *Peer) Delete(ctx context.Context, dgst digest.Digest) error {
 	c, err := digestconv.DigestToCid(dgst)
 	if err != nil {
 		return errors.Wrap(err, "failed to convert digest")
 	}
 
-	// Recursively removing a pin will not remove shared chunks because IPFS has
-	// its internal refcounting. This will expose the unpinned blobs to IPFS GC.
-	err = s.cln.Pin().Rm(ctx, path.IpfsPath(c), options.Pin.RmRecursive(true))
-	if err != nil {
-		return errors.Wrap(err, "failed to remove pin")
-	}
-
-	return nil
+	return p.dserv.Remove(ctx, c)
 }
