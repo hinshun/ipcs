@@ -5,9 +5,8 @@ go 1.12
 require (
 	github.com/Microsoft/hcsshim v0.8.10 // indirect
 	github.com/Microsoft/hcsshim/test v0.0.0-20200923174857-380508768ed2 // indirect
-	github.com/Netflix/p2plab v0.0.0-20200602171820-300ac43d3984 // indirect
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
-	github.com/containerd/console v1.0.1 // indirect
+	github.com/containerd/console v1.0.1
 	github.com/containerd/containerd v1.4.1
 	github.com/containerd/continuity v0.0.0-20200928162600-f2cc35102c2a // indirect
 	github.com/containerd/fifo v0.0.0-20200410184934-f15a3290365b // indirect
@@ -15,6 +14,7 @@ require (
 	github.com/containerd/ttrpc v1.0.2 // indirect
 	github.com/containerd/typeurl v1.0.1 // indirect
 	github.com/coreos/go-systemd/v22 v22.1.0 // indirect
+	github.com/docker/distribution v0.0.0-20190905152932-14b96e55d84c
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/ipfs/go-bitswap v0.2.20
@@ -51,10 +51,10 @@ require (
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.1.3 // indirect
-	github.com/rs/zerolog v1.20.0 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190710185942-9d28bd7c0945 // indirect
 	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
+	github.com/urfave/cli/v2 v2.2.0
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a

@@ -10,11 +10,10 @@ import (
 	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/namespaces"
-	"github.com/containerd/containerd/oci"
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/remotes/docker"
+	"github.com/docker/distribution/reference"
 	"github.com/hinshun/ipcs"
-	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
 )
 
@@ -36,10 +35,22 @@ func run(ctx context.Context, ref string) error {
 		return errors.Wrap(err, "failed to create containerd client")
 	}
 
+	named, err := reference.ParseNormalizedNamed(ref)
+	if err != nil {
+		return errors.Wrapf(err, "cannot parse %q", ref)
+	}
+	ref = reference.TagNameOnly(named).String()
+
 	return Convert(ctx, cln, ref)
 }
 
 func Convert(ctx context.Context, cln *containerd.Client, ref string) error {
+	ctx, done, err := cln.WithLease(ctx)
+	if err != nil {
+		return err
+	}
+	defer done(ctx)
+
 	resolver := docker.NewResolver(docker.ResolverOptions{
 		Client: http.DefaultClient,
 	})
@@ -97,42 +108,6 @@ func Convert(ctx context.Context, cln *containerd.Client, ref string) error {
 		return err
 	}
 	log.Printf("Successfully unpacked image %s", img.Name)
-
-	return nil
-}
-
-func RunContainer(ctx context.Context, cln *containerd.Client, ref, id string) error {
-	image, err := cln.GetImage(ctx, ref)
-	if err != nil {
-		return errors.Wrap(err, "failed to get image")
-	}
-	log.Printf("Successfully get image %q", image.Name())
-
-	var (
-		opts  []oci.SpecOpts
-		cOpts []containerd.NewContainerOpts
-		s     specs.Spec
-	)
-
-	opts = append(opts,
-		oci.WithRootFSReadonly(),
-		oci.WithProcessCwd("/"),
-		oci.WithProcessArgs("/bin/sleep", "1"),
-	)
-	cOpts = append(cOpts,
-		containerd.WithImage(image),
-		containerd.WithSnapshotter(containerd.DefaultSnapshotter),
-		containerd.WithNewSnapshot(id, image),
-		containerd.WithImageStopSignal(image, "SIGTERM"),
-		containerd.WithSpec(&s, opts...),
-	)
-
-	log.Printf("Creating container %q", id)
-	container, err := cln.NewContainer(ctx, id, cOpts...)
-	if err != nil {
-		return errors.Wrap(err, "failed to create container")
-	}
-	log.Printf("Successfully create container %q", container.ID())
 
 	return nil
 }

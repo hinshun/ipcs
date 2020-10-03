@@ -12,3 +12,8 @@ disabled_plugins = ["io.containerd.content.v1.content"]
   [proxy_plugins.ipcs]
     type = "content"
     address = "./tmp/ipcsd/ipcsd.sock"
+
+[plugins."io.containerd.grpc.v1.cri"]
+  disable_cgroup = true
+  disable_apparmor = true
+  restrict_oom_score_adj = true

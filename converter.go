@@ -30,14 +30,14 @@ type Converter interface {
 }
 
 type converter struct {
-	ingester content.Ingester
+	store    content.Store
 	provider content.Provider
 }
 
 // NewConverter returns a new image manifest converter.
-func NewConverter(ingester content.Ingester, provider content.Provider) Converter {
+func NewConverter(store content.Store, provider content.Provider) Converter {
 	return &converter{
-		ingester: ingester,
+		store:    store,
 		provider: provider,
 	}
 }
@@ -57,13 +57,13 @@ func (c *converter) Convert(ctx context.Context, desc ocispec.Descriptor) (ocisp
 	}
 	log.Printf("Original Manifest [%d] %s:\n%s", len(origMfstJSON), desc.Digest, origMfstJSON)
 
-	mfst.Config.Digest, err = copyFile(ctx, c.ingester, c.provider, mfst.Config)
+	mfst.Config.Digest, err = copyFile(ctx, c.store, c.provider, mfst.Config)
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrapf(err, "failed to upload manifest config blob %q", mfst.Config.Digest)
 	}
 
 	for i, layer := range mfst.Layers {
-		mfst.Layers[i].Digest, err = copyFile(ctx, c.ingester, c.provider, layer)
+		mfst.Layers[i].Digest, err = copyFile(ctx, c.store, c.provider, layer)
 		if err != nil {
 			return ocispec.Descriptor{}, errors.Wrapf(err, "failed to upload blob %q", layer.Digest)
 		}
@@ -79,13 +79,15 @@ func (c *converter) Convert(ctx context.Context, desc ocispec.Descriptor) (ocisp
 		Size:      int64(len(mfstJSON)),
 	}
 
-	mfstDesc.Digest, err = addFile(ctx, c.ingester, bytes.NewReader(mfstJSON), mfstDesc)
+	mfstDesc.Digest, err = addFile(ctx, c.store, bytes.NewReader(mfstJSON), mfstDesc)
 	if err != nil {
 		return ocispec.Descriptor{}, errors.Wrap(err, "failed to upload manifest")
 	}
 	log.Printf("Converted Manifest [%d] %s:\n%s", len(mfstJSON), mfstDesc.Digest, mfstJSON)
 
-	return mfstDesc, nil
+	fn := images.SetChildrenMappedLabels(c.store, images.ChildrenHandler(c.store), nil)
+	_, err = fn(ctx, mfstDesc)
+	return mfstDesc, err
 }
 
 // copyFile copies content specified by its descriptor from a provider to IPFS.
@@ -116,8 +118,6 @@ func addFile(ctx context.Context, ingester content.Ingester, r io.Reader, desc o
 		return
 	}
 
-	fmt.Println("Wrote bytes", size)
-
 	err = cw.Commit(ctx, size, "")
 	if err != nil {
 		if !errdefs.IsAlreadyExists(err) {
@@ -127,8 +127,10 @@ func addFile(ctx context.Context, ingester content.Ingester, r io.Reader, desc o
 
 	dgst = cw.Digest()
 	if dgst == "" {
+		// return "", err
+		fmt.Println("Commit with err", err)
 		matches := alreadyExistDigestPattern.FindStringSubmatch(err.Error())
 		return digest.Parse(matches[1])
 	}
-	return
+	return dgst, nil
 }
