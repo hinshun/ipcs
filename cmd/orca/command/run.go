@@ -6,6 +6,7 @@ import (
 
 	"github.com/containerd/console"
 	"github.com/containerd/containerd"
+	"github.com/containerd/containerd/cio"
 	"github.com/containerd/containerd/cmd/ctr/commands"
 	"github.com/containerd/containerd/cmd/ctr/commands/tasks"
 	"github.com/containerd/containerd/namespaces"
@@ -22,7 +23,7 @@ var runCommand = &cli.Command{
 	ArgsUsage: "<image> <command> <arg...>",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
-			Name: "rm",
+			Name:  "rm",
 			Usage: "automatically remove the container when it exits",
 		},
 		&cli.BoolFlag{
@@ -70,12 +71,13 @@ var runCommand = &cli.Command{
 			s     specs.Spec
 		)
 
-		id := "hello"
+		id := "world"
 
 		opts = append(opts,
-		        oci.WithDefaultSpec(),
-		        oci.WithDefaultUnixDevices,
+			oci.WithDefaultSpec(),
+			oci.WithDefaultUnixDevices,
 			oci.WithImageConfigArgs(image, args),
+			oci.WithCgroup(""),
 		)
 		if c.Bool("tty") {
 			opts = append(opts, oci.WithTTY)
@@ -93,7 +95,6 @@ var runCommand = &cli.Command{
 		if err != nil {
 			return errors.Wrap(err, "failed to create container")
 		}
-		log.Printf("Successfully create container %q", container.ID())
 
 		if c.Bool("rm") {
 			defer container.Delete(ctx)
@@ -110,7 +111,11 @@ var runCommand = &cli.Command{
 			}
 		}
 
-		task, err := tasks.NewTask(ctx, cln, container, "", con, false, "", nil)
+		var (
+			ioOpts = []cio.Opt{cio.WithFIFODir("/tmp/fifo-dir")}
+		)
+
+		task, err := tasks.NewTask(ctx, cln, container, "", con, false, "", ioOpts)
 		if err != nil {
 			return errors.Wrap(err, "failed to create task")
 		}

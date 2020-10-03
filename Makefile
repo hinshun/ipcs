@@ -1,23 +1,25 @@
-GOOS?=linux
-GOARCH?=amd64
-
 convert:
-	@IPFS_PATH=./tmp/ipfs go run ./cmd/convert docker.io/library/alpine:latest localhost:5000/library/alpine:p2p
+	@go run ./cmd/convert alpine
 
 compare:
-	@IPFS_PATH=./tmp/ipfs go run ./cmd/compare docker.io/library/ubuntu:xenial docker.io/titusoss/ubuntu:latest
+	@go run ./cmd/compare docker.io/library/ubuntu:xenial docker.io/titusoss/ubuntu:latest
 
-ipcs:
-	@mkdir -p ./tmp/ipcs
-	@./bin/ipcs ./tmp/ipcs/ipcs.sock ./tmp/ipcs
+ipcsd:
+	@mkdir -p ./tmp/ipcsd
+	@go run ./cmd/ipcsd ./tmp/ipcsd/ipcsd.sock ./tmp/ipcsd
 
 containerd:
 	@mkdir -p ./tmp
-	@IPFS_PATH=./tmp/ipfs ./bin/rootlesskit --copy-up=/etc \
-	  --state-dir=./tmp/rootlesskit-containerd \
-	    ./bin/containerd -l debug --config ./containerd.toml
-	    
+	@./bin/rootlesskit \
+		--copy-up=/etc \
+		--copy-up=/run \
+                --state-dir=/run/user/1001/rootlesskit-containerd \
+                sh -c "rm -f /run/containerd; exec ./bin/containerd -config ./containerd.toml"
+
+nsenter:
+	@nsenter -U --preserve-credentials -m -t $$(cat /run/user/1001/rootlesskit-containerd/child_pid)
+	  	    
 clean:
 	@rm -rf ./tmp ./bin
 
-.PHONY: convert ipcs containerd
+.PHONY: convert compare ipcsd rootless-containerd containerd

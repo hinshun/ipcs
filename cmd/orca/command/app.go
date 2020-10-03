@@ -6,14 +6,14 @@ import (
 
 func App() *cli.App {
 	app := cli.NewApp()
-	app.Name = "ctr"
+	app.Name = "orca"
 	app.Usage = "cli for container management"
 
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:  "addr",
 			Usage: "containerd address",
-			Value: "./tmp/containerd/containerd.sock",
+			Value: "/run/user/1001/containerd/containerd.sock",
 		},
 	}
 

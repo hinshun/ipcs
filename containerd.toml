@@ -1,12 +1,12 @@
 version = 2
-root = "./tmp/containerd/root"
-state = "./tmp/containerd/state"
+root = "/opt/containerd/root"
+state = "/run/user/1001/containerd"
 disabled_plugins = ["io.containerd.content.v1.content"]
 
 [grpc]
-  address = "./tmp/containerd/containerd.sock"
+  address = "/run/user/1001/containerd/containerd.sock"
   uid = 0
-  gid = 0
+  gid = 1001
 
 [proxy_plugins]
   [proxy_plugins.ipcs]

@@ -30,7 +30,7 @@ func main() {
 }
 
 func run(ctx context.Context, ref string) error {
-	cln, err := containerd.New("./tmp/containerd/containerd.sock")
+	cln, err := containerd.New("/run/user/1001/containerd/containerd.sock")
 	if err != nil {
 		return errors.Wrap(err, "failed to create containerd client")
 	}
