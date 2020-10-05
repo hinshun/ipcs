@@ -21,13 +21,20 @@ import (
 	provider "github.com/ipfs/go-ipfs-provider"
 	"github.com/ipfs/go-ipfs-provider/queue"
 	"github.com/ipfs/go-ipfs-provider/simple"
+	"github.com/ipfs/go-ipfs/namesys"
+	"github.com/ipfs/go-ipfs/namesys/resolve"
 	cbor "github.com/ipfs/go-ipld-cbor"
 	ipld "github.com/ipfs/go-ipld-format"
 	ipns "github.com/ipfs/go-ipns"
 	merkledag "github.com/ipfs/go-merkledag"
+	ipfspath "github.com/ipfs/go-path"
+	"github.com/ipfs/go-path/resolver"
 	unixfile "github.com/ipfs/go-unixfs/file"
 	"github.com/ipfs/go-unixfs/importer/balanced"
 	"github.com/ipfs/go-unixfs/importer/helpers"
+	uio "github.com/ipfs/go-unixfs/io"
+	iface "github.com/ipfs/interface-go-ipfs-core"
+	corepath "github.com/ipfs/interface-go-ipfs-core/path"
 	libp2p "github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	host "github.com/libp2p/go-libp2p-core/host"
@@ -57,10 +64,11 @@ var (
 
 type Peer struct {
 	host     host.Host
+	routing  routing.ContentRouting
+	namesys  namesys.NameSystem
 	dstore   datastore.Batching
 	bstore   blockstore.Blockstore
 	bserv    blockservice.BlockService
-	routing  routing.ContentRouting
 	provider provider.System
 	bswap    *bitswap.Bitswap
 	dserv    ipld.DAGService
@@ -98,7 +106,8 @@ func New(ctx context.Context, root string, port int) (*Peer, error) {
 		"ipns": ipns.Validator{KeyBook: pstore},
 	}
 
-	bootstrapPeers, err := config.DefaultBootstrapPeers()
+	bootstrapAddrs := append(config.DefaultBootstrapAddresses, "/ip4/192.168.1.97/udp/4001/quic/p2p/12D3KooWQD2jNpbXJGkoqyTZ1nDyrFbZwTUnX6Tc6AT5HrmG7xMZ")
+	bootstrapPeers, err := config.ParseBootstrapPeers(bootstrapAddrs)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse bootstrap peers")
 	}
@@ -175,11 +184,14 @@ func New(ctx context.Context, root string, port int) (*Peer, error) {
 	}()
 
 	dserv := merkledag.NewDAGService(bserv)
+	ns := namesys.NewNameSystem(r, dstore, 0)
+
 	return &Peer{
 		host:     h,
+		routing:  r,
+		namesys:  ns,
 		dserv:    dserv,
 		provider: provider,
-		routing:  r,
 		bswap:    bswap,
 		bserv:    bserv,
 		bstore:   bstore,
@@ -234,13 +246,59 @@ func (p *Peer) Add(ctx context.Context, r io.Reader) (ipld.Node, error) {
 	return nd, buf.Commit()
 }
 
-func (p *Peer) Get(ctx context.Context, c cid.Cid) (files.Node, error) {
-	nd, err := p.dserv.Get(ctx, c)
+func (p *Peer) Get(ctx context.Context, ref string) (ipld.Node, error) {
+	cpath := corepath.New(ref)
+	ipath := ipfspath.Path(cpath.String())
+	ipath, err := resolve.ResolveIPNS(ctx, p.namesys, ipath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get file %q", c)
+		return nil, err
 	}
 
-	return unixfile.NewUnixfsFile(ctx, p.dserv, nd)
+	var resolveOnce resolver.ResolveOnce
+	switch ipath.Segments()[0] {
+	case "ipfs":
+		resolveOnce = uio.ResolveUnixfsOnce
+	case "ipld":
+		resolveOnce = resolver.ResolveSingle
+	default:
+		return nil, fmt.Errorf("unsupported path namespace: %s", cpath.Namespace())
+	}
+
+	r := &resolver.Resolver{
+		DAG:         p.dserv,
+		ResolveOnce: resolveOnce,
+	}
+
+	c, _, err := r.ResolveToLastNode(ctx, ipath)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.dserv.Get(ctx, c)
+}
+
+func (p *Peer) GetFile(ctx context.Context, ref string) (files.File, error) {
+	nd, err := p.Get(ctx, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := unixfile.NewUnixfsFile(ctx, p.dserv, nd)
+	if err != nil {
+		return nil, err
+	}
+
+	var file files.File
+	switch f := f.(type) {
+	case files.File:
+		file = f
+	case files.Directory:
+		return nil, iface.ErrIsDir
+	default:
+		return nil, iface.ErrNotSupported
+	}
+
+	return file, nil
 }
 
 func NewBlockstore(ctx context.Context, ds datastore.Batching) (blockstore.Blockstore, error) {

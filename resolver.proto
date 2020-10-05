@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package contentd.services.resolver.v1;
+
+import weak "gogoproto/gogo.proto";
+import "github.com/containerd/containerd/api/types/descriptor.proto";
+
+option go_package = "github.com/hinshun/ipcs";
+
+// Content provides access to a content addressable storage system.
+service Resolver {
+	rpc Resolve(ResolveRequest) returns (ResolveResponse);
+}
+
+message Resolved {
+    string name = 1;
+    containerd.types.Descriptor target = 2 [(gogoproto.nullable) = false];
+}
+
+message ResolveRequest {
+    string ref = 1;
+}
+
+message ResolveResponse {
+    Resolved resolved = 1 [(gogoproto.nullable) = false];
+}

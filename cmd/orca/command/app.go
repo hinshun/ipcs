@@ -11,16 +11,74 @@ func App() *cli.App {
 
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:  "addr",
+			Name:  "containerd-address",
+			Aliases: []string{"ctrd-addr"},
 			Usage: "containerd address",
 			Value: "/run/user/1001/containerd/containerd.sock",
+		},
+		&cli.StringFlag{
+			Name:  "contentd-address",
+			Aliases: []string{"contentd-addr"},
+			Usage: "contentd address",
+			Value: "/run/user/1001/contentd/contentd.sock",
+		},
+		&cli.StringFlag{
+			Name: "namespace",
+			Usage: "namespace to use with commands",
+			Value: "default",
+		},
+		&cli.DurationFlag{
+			Name: "timeout",
+			Usage: "total timeout for commands",
 		},
 	}
 
 	app.Commands = []*cli.Command{
-		runCommand,
-		imagesCommand,
+		podCommand,
+		containerCommand,
+		imageCommand,
+		contentCommand,
 	}
 
 	return app
+}
+
+var podCommand = &cli.Command{
+	Name:        "pod",
+	Usage:       "Manage pods",
+	Subcommands: []*cli.Command{},
+}
+
+var containerCommand = &cli.Command{
+	Name:    "container",
+	Aliases: []string{"ctr"},
+	Usage:   "Manage containers",
+	Subcommands: []*cli.Command{
+		containerExecCommand,
+		containerLogsCommand,
+		containerListCommand,
+		containerRemoveCommand,
+		containerRunCommand,
+	},
+}
+
+var imageCommand = &cli.Command{
+	Name:    "image",
+	Aliases: []string{"img"},
+	Usage:   "Manage images",
+	Subcommands: []*cli.Command{
+		imageListCommand,
+		imagePullCommand,
+		imageRemoveCommand,
+	},
+}
+
+var contentCommand = &cli.Command{
+	Name:  "content",
+	Usage: "Manage content",
+	Subcommands: []*cli.Command{
+		contentCatCommand,
+		contentListCommand,
+		contentRemoveCommand,
+	},
 }

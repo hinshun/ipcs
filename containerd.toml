@@ -9,9 +9,9 @@ disabled_plugins = ["io.containerd.content.v1.content"]
   gid = 1001
 
 [proxy_plugins]
-  [proxy_plugins.ipcs]
+  [proxy_plugins.contentd]
     type = "content"
-    address = "./tmp/ipcsd/ipcsd.sock"
+    address = "/run/user/1001/contentd/contentd.sock"
 
 [plugins."io.containerd.grpc.v1.cri"]
   disable_cgroup = true

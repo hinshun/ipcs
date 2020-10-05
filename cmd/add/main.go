@@ -18,7 +18,7 @@ func main() {
 
 func run(args []string) error {
 	ctx := context.Background()
-	p, err := ipcs.New(ctx, "./tmp/ipcsd", 0)
+	p, err := ipcs.New(ctx, "/run/user/1001/contentd/contentd.sock", 0)
 	if err != nil {
 		return err
 	}

@@ -2,7 +2,6 @@ package ipcs
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/containerd/containerd/content"
@@ -16,30 +15,25 @@ import (
 //
 // If the content is not present, ErrNotFound will be returned.
 func (p *Peer) Info(ctx context.Context, dgst digest.Digest) (content.Info, error) {
-	fmt.Println("Info", dgst)
-
 	c, err := digestconv.DigestToCid(dgst)
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to convert digest %q to cid", dgst)
 	}
 
-	fmt.Println("Getting node", c)
-	nd, err := p.dserv.Get(ctx, c)
+	file, err := p.GetFile(ctx, c.String())
 	if err != nil {
-		return content.Info{}, errors.Wrapf(err, "failed to get ipld node %q", c)
+		return content.Info{}, errors.Wrapf(err, "failed to get node %q", c)
 	}
 
-	fmt.Println("Getting size", c)
-	size, err := nd.Size()
+	size, err := file.Size()
 	if err != nil {
 		return content.Info{}, errors.Wrapf(err, "failed to get size of %q", c)
 	}
 
-	fmt.Println("Returning info")
 	now := time.Now()
 	return content.Info{
 		Digest:    dgst,
-		Size:      int64(size),
+		Size:      size,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}, nil

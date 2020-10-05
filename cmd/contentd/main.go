@@ -43,6 +43,9 @@ func run(args []string) error {
 	// Register the service with the gRPC server.
 	contentapi.RegisterContentServer(rpc, service)
 
+	// Register the peer's resolver service with the gRPC server.
+	ipcs.RegisterResolverServer(rpc, p)
+
 	// Listen and serve.
 	os.Remove(args[1])
 	l, err := net.Listen("unix", args[1])

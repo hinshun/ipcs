@@ -2,7 +2,6 @@ package ipcs
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"time"
 
@@ -158,7 +157,6 @@ func (w *writer) Truncate(size int64) error {
 		}
 
 		w.dgst, err = digestconv.CidToDigest(nd.Cid())
-		fmt.Println("Added file to peer", w.dgst, "=>", nd.Cid())
 		return err
 	})
 

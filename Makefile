@@ -4,9 +4,10 @@ convert:
 compare:
 	@go run ./cmd/compare docker.io/library/ubuntu:xenial docker.io/titusoss/ubuntu:latest
 
-ipcsd:
-	@mkdir -p ./tmp/ipcsd
-	@go run ./cmd/ipcsd ./tmp/ipcsd/ipcsd.sock ./tmp/ipcsd
+contentd:
+	@mkdir -p /run/user/1001/contentd
+	@mkdir -p ./tmp/contentd
+	@go run ./cmd/contentd /run/user/1001/contentd/contentd.sock ./tmp/contentd
 
 containerd:
 	@mkdir -p ./tmp
@@ -17,9 +18,9 @@ containerd:
                 sh -c "rm -f /run/containerd; exec ./bin/containerd -config ./containerd.toml"
 
 nsenter:
-	@nsenter -U --preserve-credentials -m -t $$(cat /run/user/1001/rootlesskit-containerd/child_pid)
+	@nsenter --preserve-credentials -U -m -w -t $$(cat /run/user/1001/rootlesskit-containerd/child_pid)
 	  	    
 clean:
 	@rm -rf ./tmp ./bin
 
-.PHONY: convert compare ipcsd rootless-containerd containerd
+.PHONY: convert compare contentd rootless-containerd containerd

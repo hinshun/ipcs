@@ -74,7 +74,7 @@ func Convert(ctx context.Context, cln *containerd.Client, ref string) error {
 	log.Printf("Successfully converted manifest %s", mfstDesc.Digest)
 
 	img := images.Image{
-		Name:   name,
+		Name:   "/ipns/highlevel.build/alpine",
 		Target: mfstDesc,
 	}
 

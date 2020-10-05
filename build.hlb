@@ -1,8 +1,18 @@
 fs default() {
-	ipcsd
+	contentd
 	copy containerd "/bin" "/" with contentsOnly
 	copy rootlesskit "/" "/"
 	download "bin/"
+}
+
+fs gen() {
+	protobuild fs {
+		local "." with option {
+        		includePatterns "go.mod" "go.sum" "Protobuild.toml" "**/*.go" "**/*.proto"
+		}
+	}
+	rm "vendor"
+	download "."
 }
 
 fs localGo() {
@@ -11,12 +21,12 @@ fs localGo() {
 	}
 }
 
-fs _ipcsd() {
+fs _contentd() {
 	image "golang"
-	run "go build -o /out/ipcsd ./cmd/ipcsd/main.go" with option {
+	run "go build -o /out/contentd ./cmd/contentd/main.go" with option {
 		dir "/in"
 		mount localGo "/in" as modSrc
-		mount scratch "/out" as ipcsd
+		mount scratch "/out" as contentd
 	}
 }
 
@@ -40,11 +50,29 @@ fs rootlesskit() {
 	untar tarball("https://github.com/rootless-containers/rootlesskit/releases/download/v0.10.1/rootlesskit-x86_64.tar.gz")
 }
 
-fs debug() {
-	image "alpine"
-	run "apk add -U tree"
-	run "tree /in" with option {
-		ignoreCache
-		mount rootlesskit "/in"
+fs protocZip() {
+        http "https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protoc-3.13.0-linux-x86_64.zip" with option {
+        	filename "protoc.zip"
+        }
+}
+
+fs _protobuild(fs src) {
+	image "golang"
+	run "apt update && apt install unzip"
+	run "unzip /in/protoc.zip -d /usr/local" with option {
+		mount protocZip "/in" with readonly
+	}
+	run <<~GO
+		go get 
+			google.golang.org/protobuf/cmd/protoc-gen-go
+			github.com/stevvooe/protobuild
+	GO
+	run <<~PROTO
+		go mod vendor &&
+		go install ./cmd/protoc-gen-gogocontentd &&
+		go list ./... | grep -v vendor | xargs protobuild
+	PROTO with option {
+		dir "/go/src/github.com/hinshun/ipcs"
+		mount src "/go/src/github.com/hinshun/ipcs" as protobuild
 	}
 }

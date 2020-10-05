@@ -17,7 +17,7 @@ var imagesCommand = &cli.Command{
 	Action: func(c *cli.Context) error {
 		ctx := namespaces.WithNamespace(c.Context, "ipcs")
 
-		cln, err := containerd.New(c.String("addr"))
+		cln, err := containerd.New(c.String("containerd-addr"))
 		if err != nil {
 			return errors.Wrap(err, "failed to create containerd client")
 		}
