@@ -88,6 +88,17 @@ func (c *Client) Resolver() remotes.Resolver {
 	}
 }
 
+// func (c *Client) Keystore() Keystore {
+// 	return &keystoreClient{
+// 		cln: NewKeystoreClient(c.conn),
+// 	}
+// }
+
+// type Keystore interface {
+// 	Add(ctx context.Context, name, pubKey string) error
+// 	Generate(ctx context.Context, name, keyType string, size int) (pubKey string, err error)
+// }
+
 type resolverProxy struct {
 	store    content.Store
 	resolver ResolverClient

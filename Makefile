@@ -7,7 +7,7 @@ compare:
 contentd:
 	@mkdir -p /run/user/1001/contentd
 	@mkdir -p ./tmp/contentd
-	@go run ./cmd/contentd /run/user/1001/contentd/contentd.sock ./tmp/contentd
+	@go run ./cmd/contentd /ip4/10.0.0.1/udp/0/quic ./tmp/contentd /run/user/1001/contentd/contentd.sock
 
 containerd:
 	@mkdir -p ./tmp

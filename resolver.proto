@@ -7,7 +7,6 @@ import "github.com/containerd/containerd/api/types/descriptor.proto";
 
 option go_package = "github.com/hinshun/ipcs";
 
-// Content provides access to a content addressable storage system.
 service Resolver {
 	rpc Resolve(ResolveRequest) returns (ResolveResponse);
 }

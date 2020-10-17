@@ -14,7 +14,12 @@ import (
 )
 
 func main() {
-	err := run(os.Args)
+	if len(os.Args) < 4 {
+		fmt.Fprintf(os.Stderr, "invalid args: usage: %s <libp2p multiaddr> <root> <unix addr>\n", os.Args[0])
+		os.Exit(1)
+	}
+
+	err := run(os.Args[1:])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
@@ -22,14 +27,7 @@ func main() {
 }
 
 func run(args []string) error {
-	// Provide a unix address to listen to, this will be the `address`
-	// in the `proxy_plugin` configuration.
-	// The root will be used to store the snapshots.
-	if len(args) < 3 {
-		return errors.Errorf("invalid args: usage: %s <unix addr> <root>\n", args[0])
-	}
-
-	p, err := ipcs.New(context.Background(), args[2], 0)
+	p, err := ipcs.New(context.Background(), args[0], args[1])
 	if err != nil {
 		return errors.Wrap(err, "failed to create ipcs content store")
 	}
@@ -47,15 +45,15 @@ func run(args []string) error {
 	ipcs.RegisterResolverServer(rpc, p)
 
 	// Listen and serve.
-	os.Remove(args[1])
-	l, err := net.Listen("unix", args[1])
+	os.Remove(args[2])
+	l, err := net.Listen("unix", args[2])
 	if err != nil {
 		return err
 	}
 	defer l.Close()
 
 	fmt.Printf("Identity generated %s\n", p.Host().ID())
-	fmt.Printf("GRPC Server listening on %s\n", args[1])
+	fmt.Printf("GRPC Server listening on %s\n", args[2])
 	for _, ma := range p.Host().Addrs() {
 		fmt.Printf("Libp2p listening on %s\n", ma)
 	}

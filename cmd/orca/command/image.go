@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 
-	"github.com/containerd/containerd/namespaces"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -13,8 +12,6 @@ var imageListCommand = &cli.Command{
 	Usage:   "List images",
 	Flags:   []cli.Flag{},
 	Action: func(c *cli.Context) error {
-		ctx := namespaces.WithNamespace(c.Context, "ipcs")
-
 		cln, ctx, cancel, err := NewClient(c)
 		if err != nil {
 			return err

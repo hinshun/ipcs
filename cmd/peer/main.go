@@ -10,21 +10,20 @@ import (
 )
 
 func main() {
-	err := run(context.Background())
+	err := run(context.Background(), os.Args[1], os.Args[2])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context) error {
-	root := "./tmp/peer"
+func run(ctx context.Context, addr, root string) error {
 	err := os.MkdirAll(root, 0711)
 	if err != nil {
 		return err
 	}
 
-	p, err := ipcs.New(ctx, root, 0)
+	p, err := ipcs.New(ctx, addr, root)
 	if err != nil {
 		return err
 	}

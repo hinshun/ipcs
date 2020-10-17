@@ -47,6 +47,7 @@ require (
 	github.com/libp2p/go-libp2p-record v0.1.3
 	github.com/libp2p/go-libp2p-tls v0.1.3
 	github.com/libp2p/go-libp2p-yamux v0.2.8
+	github.com/multiformats/go-multiaddr-dns v0.2.0 // indirect
 	github.com/multiformats/go-multihash v0.0.14
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.1
@@ -60,6 +61,7 @@ require (
 	github.com/urfave/cli/v2 v2.2.0
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
+	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20200609130330-bd2cb7843e1b // indirect
 	google.golang.org/grpc v1.32.0
 	gotest.tools/v3 v3.0.2 // indirect
 )

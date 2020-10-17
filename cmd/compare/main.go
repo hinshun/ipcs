@@ -120,7 +120,11 @@ type BlockParent struct {
 }
 
 func CompareManifestBlocks(ctx context.Context, ipfsCln iface.CoreAPI, blockParentByCid map[string]*BlockParent, ref string, desc ocispec.Descriptor) error {
-	store := ipcs.New(ctx, "./tmp/ipcs", 0)
+	store, err := ipcs.New(ctx, "/ip4/0.0.0.0/udp/0/quic", "/run/user/1001/contentd")
+	if err != nil {
+		return err
+	}
+
 	mfst, err := images.Manifest(ctx, store, desc, platforms.Default())
 	if err != nil {
 		return errors.Wrap(err, "failed to get manifest")

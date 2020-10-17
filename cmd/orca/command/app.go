@@ -11,24 +11,24 @@ func App() *cli.App {
 
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:  "containerd-address",
+			Name:    "containerd-address",
 			Aliases: []string{"ctrd-addr"},
-			Usage: "containerd address",
-			Value: "/run/user/1001/containerd/containerd.sock",
+			Usage:   "containerd address",
+			Value:   "/run/user/1001/containerd/containerd.sock",
 		},
 		&cli.StringFlag{
-			Name:  "contentd-address",
+			Name:    "contentd-address",
 			Aliases: []string{"contentd-addr"},
-			Usage: "contentd address",
-			Value: "/run/user/1001/contentd/contentd.sock",
+			Usage:   "contentd address",
+			Value:   "/run/user/1001/contentd/contentd.sock",
 		},
 		&cli.StringFlag{
-			Name: "namespace",
+			Name:  "namespace",
 			Usage: "namespace to use with commands",
 			Value: "default",
 		},
 		&cli.DurationFlag{
-			Name: "timeout",
+			Name:  "timeout",
 			Usage: "total timeout for commands",
 		},
 	}
@@ -38,6 +38,7 @@ func App() *cli.App {
 		containerCommand,
 		imageCommand,
 		contentCommand,
+		keyCommand,
 	}
 
 	return app
@@ -80,5 +81,17 @@ var contentCommand = &cli.Command{
 		contentCatCommand,
 		contentListCommand,
 		contentRemoveCommand,
+	},
+}
+
+var keyCommand = &cli.Command{
+	Name:  "key",
+	Usage: "Manage keys",
+	Subcommands: []*cli.Command{
+		keyAddCommand,
+		keyGenCommand,
+		keyListCommand,
+		keyRemoveCommand,
+		keyRenameCommand,
 	},
 }

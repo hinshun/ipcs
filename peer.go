@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	bitswap "github.com/ipfs/go-bitswap"
@@ -21,6 +22,7 @@ import (
 	provider "github.com/ipfs/go-ipfs-provider"
 	"github.com/ipfs/go-ipfs-provider/queue"
 	"github.com/ipfs/go-ipfs-provider/simple"
+	"github.com/ipfs/go-ipfs/keystore"
 	"github.com/ipfs/go-ipfs/namesys"
 	"github.com/ipfs/go-ipfs/namesys/resolve"
 	cbor "github.com/ipfs/go-ipld-cbor"
@@ -66,15 +68,16 @@ type Peer struct {
 	host     host.Host
 	routing  routing.ContentRouting
 	namesys  namesys.NameSystem
+	provider provider.System
+	dserv    ipld.DAGService
 	dstore   datastore.Batching
 	bstore   blockstore.Blockstore
 	bserv    blockservice.BlockService
-	provider provider.System
 	bswap    *bitswap.Bitswap
-	dserv    ipld.DAGService
+	kstore   keystore.Keystore
 }
 
-func New(ctx context.Context, root string, port int) (*Peer, error) {
+func New(ctx context.Context, addr, root string) (*Peer, error) {
 	priv, pub, err := crypto.GenerateEd25519Key(rand.Reader)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate private key")
@@ -101,12 +104,18 @@ func New(ctx context.Context, root string, port int) (*Peer, error) {
 		return nil, errors.Wrap(err, "failed to create datastore")
 	}
 
+	kstore, err := keystore.NewFSKeystore(filepath.Join(root, "keystore"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create keystore")
+	}
+
 	validator := record.NamespacedValidator{
 		"pk":   record.PublicKeyValidator{},
 		"ipns": ipns.Validator{KeyBook: pstore},
 	}
 
-	bootstrapAddrs := append(config.DefaultBootstrapAddresses, "/ip4/192.168.1.97/udp/4001/quic/p2p/12D3KooWQD2jNpbXJGkoqyTZ1nDyrFbZwTUnX6Tc6AT5HrmG7xMZ")
+	// bootstrapAddrs := append(config.DefaultBootstrapAddresses, "/ip4/192.168.1.97/udp/4001/quic/p2p/12D3KooWQD2jNpbXJGkoqyTZ1nDyrFbZwTUnX6Tc6AT5HrmG7xMZ")
+	bootstrapAddrs := []string{"/ip4/10.0.0.2/udp/35671/quic/p2p/12D3KooWGAvEtNZn6zfYVzydKi8AwJNMFGzpMmnjwV1dRHctMNTd"}
 	bootstrapPeers, err := config.ParseBootstrapPeers(bootstrapAddrs)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse bootstrap peers")
@@ -136,8 +145,19 @@ func New(ctx context.Context, root string, port int) (*Peer, error) {
 		libp2p.Security(tls.ID, tls.New),
 		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
 		libp2p.Transport(quic.NewTransport),
-		libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/0.0.0.0/udp/%d/quic", port)),
+		libp2p.ListenAddrStrings(addr),
 		libp2p.Routing(newRouting),
+
+		// -------------
+		// NAT Traversal
+		// -------------
+
+		// Attempt to create port mapping on router via UPnP.
+		libp2p.NATPortMap(),
+		// Detects if behind NAT, if so, find & announce public relays.
+		libp2p.EnableAutoRelay(),
+		// Provide service for other peers to test reachability.
+		libp2p.EnableNATService(),
 	)
 
 	bstore, err := NewBlockstore(ctx, dstore)
@@ -190,11 +210,12 @@ func New(ctx context.Context, root string, port int) (*Peer, error) {
 		host:     h,
 		routing:  r,
 		namesys:  ns,
-		dserv:    dserv,
 		provider: provider,
+		dserv:    dserv,
 		bswap:    bswap,
 		bserv:    bserv,
 		bstore:   bstore,
+		kstore:   kstore,
 		dstore:   dstore,
 	}, nil
 }
